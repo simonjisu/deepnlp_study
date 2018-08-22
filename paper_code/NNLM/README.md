@@ -15,9 +15,9 @@ python3 preprocessing.py -pth [your_data_path]
 ```
 nohup python3 -u main.py -pth [your_data_path] > ./trainlog &
 ```
-> TIP: add option '-u' after "python3" will show all print process
+> TIP: add option '-u' after "python3" will show all print values while process
 >
-> Check your "trainlog" file after training.
+> Check your "trainlog" file after training. type `tail -f ./trainlog`
 >
 > For more Help
 
