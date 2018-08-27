@@ -8,6 +8,7 @@ if __name__ == "__main__":
     parser.add_argument('-vap', '--VALID_FILE', help='location of valid path, default is "valid_tokens"', type=str, default='valid_tokens')
     parser.add_argument('-tep', '--TEST_FILE', help='location of test path, default is "test_tokens"', type=str, default='test_tokens')
     parser.add_argument('-svp', '--SAVE_PATH', help='saving model path, default is "./model/nnlm.model"', type=str, default='./model/nnlm.model')
+    parser.add_argument('-vp', '--VP', help='location to load vocabulary path, default is "./model/vocabulary"', type=str, default='./model/vocabulary')
     parser.add_argument('-bat', '--BATCH', help='batch size, default is 1024', type=int, default=1024)
     parser.add_argument('-ngram', '--N_GRAM', help='n-gram size, default is 5', type=int, default=5)
     parser.add_argument('-hid', '--HIDDEN', help='hidden size, default is 500', type=int, default=500)

@@ -28,7 +28,17 @@ def train(config):
     USE_CUDA = torch.cuda.is_available()
     DEVICE = "cuda" if USE_CUDA else None
     # Create Dataset & Loader
-    dataset_creator = DataSet(base_path=config.BASE_PATH, train=config.TRAIN_FILE, valid=config.VALID_FILE, test=config.TEST_FILE, n_gram=config.N_GRAM, tokenizer=str.split, save_tokens=False, direct_load=True, remove_short=True, device=DEVICE)
+    dataset_creator = DataSet(base_path=config.BASE_PATH, 
+                              train=config.TRAIN_FILE, 
+                              valid=config.VALID_FILE, 
+                              test=config.TEST_FILE, 
+                              n_gram=config.N_GRAM, 
+                              tokenizer=str.split, 
+                              save_tokens=False, 
+                              direct_load=True, 
+                              remove_short=True, 
+                              device=DEVICE,
+                              fixed_vocab=config.VP)
     train_data, valid_data, test_data = dataset_creator.splits()
     train_loader, valid_loader, test_loader= dataset_creator.create_loader(train=train_data, valid=valid_data, test=test_data, batch_size=config.BATCH)
     

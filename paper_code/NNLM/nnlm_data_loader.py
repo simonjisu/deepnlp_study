@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import unicodedata
 import torch
 import torch.utils.data as torchdata
@@ -9,7 +10,7 @@ from nltk.util import ngrams
 # Dataset
 class DataSet(object):
     def __init__(self, base_path='../data/', train=None, valid=None, test=None, n_gram=3, tokenizer=None, 
-                 save_tokens=False, direct_load=False, remove_short=True, device=None):
+                 save_tokens=False, direct_load=False, remove_short=True, fixed_vocab=None, device=None):
         self.base_path = base_path
         self.train = train
         self.valid = valid
@@ -19,6 +20,7 @@ class DataSet(object):
         self.direct_load = direct_load
         self._remove_short = remove_short
         self.device = device
+        self.fixed_vocab = fixed_vocab
         self.tokenizer = str.split if self.direct_load else tokenizer
         self.path_dict = dict((name, getattr(self, name)) for name in ['train', 'valid', 'test']
                               if getattr(self, name) is not None)
@@ -33,7 +35,8 @@ class DataSet(object):
                                         n_gram=self.n_gram, 
                                         train=True, 
                                         remove_short=self._remove_short,
-                                        device=self.device)
+                                        device=self.device,
+                                        fixed_vocab=self.fixed_vocab)
                 datasets.append(dataset)
             else:
                 data = self.load_and_tokenization(path_=os.path.join(self.base_path, path))
@@ -46,7 +49,7 @@ class DataSet(object):
                                         vocabulary=datasets[0].vocab,
                                         device=self.device)
                 datasets.append(dataset)
-
+        
         return datasets
 
     def _unicode_to_ascii(self, s):
@@ -93,29 +96,46 @@ class Vocab(object):
         self.stoi = defaultdict()
         self.itos = None
         
-    def build_vocab(self, all_tokens):
-        # Build Vocabulary
-        flatten = lambda x: [tkn for sen in x for tkn in sen]
-        self.unique_tokens = set(flatten(all_tokens))
-        self.stoi['<unk>'] = 0
-        self.stoi['<pad>'] = 1
-        for i, token in enumerate(self.unique_tokens, 2):
-            self.stoi[token] = i
+    def build_vocab(self, all_tokens, fixed_vocab=None):
+        """
+        fixed vocab must be a path
+        """
+        if fixed_vocab:
+            self.load(path=fixed_vocab)
+        else:
+            # Build Vocabulary
+            flatten = lambda x: [tkn for sen in x for tkn in sen]
+            unique_tokens = set(flatten(all_tokens))
+            self.stoi['<unk>'] = 0
+            self.stoi['<pad>'] = 1
+            for i, token in enumerate(unique_tokens, 2):
+                self.stoi[token] = i
         self.itos = [t for t, i in sorted(
             [(token, index) for token, index in self.stoi.items()], key=lambda x: x[1])]
+            
+    def save(self, path, vocab_dict):
+        js = json.dumps(vocab_dict)
+        with open(path, 'w', encoding='utf-8') as file:
+            print(js, file=file)
+            
+    def load(self, path):
+        with open(path, 'r', encoding='utf-8') as file:
+            js = file.read()
+        self.stoi = json.loads(js)
     
     def __len__(self):
         return len(self.stoi)
     
 # CustomDataset
 class CustomDataset(torchdata.Dataset):
-    def __init__(self, data, n_gram=3, train=True, remove_short=True, vocabulary=None, device=None):
+    def __init__(self, data, n_gram=3, train=True, remove_short=True, vocabulary=None, device=None, fixed_vocab=None):
         self.n_gram = n_gram
         self.func_ngrams = ngrams
         self._remove_short = remove_short
         self._removed = 0
         self._total = 0
         self.device = device
+        self.fixed_vocab = fixed_vocab
         if train:
             self.vocab = Vocab()
             self.data = self.create_dataset(data, train=train)
@@ -135,14 +155,15 @@ class CustomDataset(torchdata.Dataset):
         else:
             data_ = data
         if train:
-            self.vocab.build_vocab(data_)
+            self.vocab.build_vocab(data_, fixed_vocab=self.fixed_vocab)
+                
         data_ = self.numerical(data_)
         data_ = self.get_ngrams(data_)
         return data_    
 
     def numerical(self, all_tokens):
         # Numericalize all tokens
-        f = lambda x: self.vocab.stoi.get(x) if x in self.vocab.unique_tokens else self.vocab.stoi['<unk>']
+        f = lambda x: self.vocab.stoi.get(x) if x in self.vocab.stoi.keys() else self.vocab.stoi['<unk>']
         all_tokens_numerical = [list(map(f, s)) for s in all_tokens]
         return all_tokens_numerical            
     
