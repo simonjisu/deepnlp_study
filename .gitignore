@@ -52,3 +52,5 @@ __pycache__
 .ipynb_checkpoints/
 data/*
 paper_code/NNLM/model/*
+paper_code/WORD2VEC/model/*
+
