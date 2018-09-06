@@ -1,6 +1,7 @@
 import torch
 import random
 
+
 def negative_sampling(targets, unigram_distribution, k, use_cuda=False):
     """
     unigram_distribution: have to be numericalize words
@@ -24,7 +25,7 @@ def negative_sampling(targets, unigram_distribution, k, use_cuda=False):
 def most_similar(word, model, vocab, top_k=10):
     sims = []
     for i in range(len(vocab)):
-        if vocab.itos[i] == word: 
+        if vocab.itos[i] == word:
             continue
         sim = model.cosine_similarity(vocab.stoi[word], i)
         sims.append((vocab.itos[i], sim.item()))
