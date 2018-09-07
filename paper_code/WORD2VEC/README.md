@@ -37,6 +37,9 @@ $ nohup python3 -u main.py -pth [your_data_path] [... other options] > ./trainlo
 $ sh run.sh
 ```
 
+> open wiki.log to see how training is going well
+
+
 > For more Help
 
 ```
