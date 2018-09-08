@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import random
 
 
@@ -22,11 +23,13 @@ def negative_sampling(targets, unigram_distribution, k, use_cuda=False):
     return torch.LongTensor(neg_samples)
 
 
-def most_similar(word, model, vocab, top_k=10):
+def most_similar(word, word_vectors, vocab, top_k=10):
     sims = []
+    wv1 = word_vectors[vocab.stoi[word]] 
     for i in range(len(vocab)):
         if vocab.itos[i] == word:
             continue
-        sim = model.cosine_similarity(vocab.stoi[word], i)
+        wv2 = word_vectors[i]
+        sim = F.cosine_similarity(torch.FloatTensor(wv1), torch.FloatTensor(wv2), dim=0)
         sims.append((vocab.itos[i], sim.item()))
     return sorted(sims, key=lambda x: x[1], reverse=True)[:top_k]

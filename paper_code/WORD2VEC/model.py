@@ -22,7 +22,7 @@ class Word2Vec(nn.Module):
         neg = negs.bmm(embed.transpose(1, 2)).sum(1)  # B, k, 1  > B, 1
         nll = F.logsigmoid(pos) + F.logsigmoid(neg)
         return -torch.mean(nll)
-
+    
     def cosine_similarity(self, idx1, idx2):
         wv1 = self.embedding_w.weight[idx1]
         wv2 = self.embedding_w.weight[idx2]
