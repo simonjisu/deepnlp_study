@@ -7,6 +7,8 @@ papers:
 
 ### Getting Start with "brown corpus"
 
+** Before Start Please make a directory named "model" to save you model **
+
 ```
 $ nohup python3 -u main.py > ./trainlog &
 ```
