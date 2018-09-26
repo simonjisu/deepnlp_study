@@ -1,18 +1,23 @@
+# -*- coding utf-8 -*- 
+# author: https://github.com/simonjisu
+
 import torch
 import torch.nn as nn
-from layers import Encode_Layer, Decode_Layer
-from sublayers import PositionalEncoding
-from utils import get_padding_mask
+
+from .layers import Encode_Layer, Decode_Layer
+from .sublayers import PositionalEncoding, Embedding
+from .modules import XavierLinear
+from .utils import get_padding_mask
 
 # Encoder
 class Encoder(nn.Module):
     def __init__(self, vocab_len, max_seq_len, n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=0, drop_rate=0.1, use_conv=False, return_attn=True):
+                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True):
         super(Encoder, self).__init__()
         self.pad_idx = pad_idx
         self.return_attn = return_attn
-        self.embed_layer = nn.Embedding(vocab_len, d_model, padding_idx=pad_idx)
-        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model, pad_idx)
+        self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
+        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Encode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
                                                   use_conv=use_conv) \
@@ -49,12 +54,12 @@ class Encoder(nn.Module):
 # Decoder
 class Decoder(nn.Module):
     def __init__(self, vocab_len, max_seq_len, n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=0, drop_rate=0.1, use_conv=False, return_attn=True):
+                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True):
         super(Decoder, self).__init__()
         self.pad_idx = pad_idx
         self.return_attn = return_attn
-        self.embed_layer = nn.Embedding(vocab_len, d_model, padding_idx=pad_idx)
-        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model, pad_idx)
+        self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
+        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Decode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
                                                   use_conv=use_conv) \
@@ -105,10 +110,13 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, enc_vocab_len, enc_max_seq_len, dec_vocab_len, dec_max_seq_len, 
                  n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=0, drop_rate=0.1, use_conv=False, return_attn=True,
+                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True,
                  linear_weight_share=True, embed_weight_share=True):
         super(Transformer, self).__init__()
         self.return_attn = return_attn
+        self.pad_idx = pad_idx
+        self.d_model = d_model
+        
         self.encoder = Encoder(enc_vocab_len, enc_max_seq_len, n_layer, n_head, 
                                d_model, d_k, d_v, d_f, 
                                pad_idx=pad_idx, 
@@ -125,13 +133,13 @@ class Transformer(nn.Module):
         if linear_weight_share:
             # share the same weight matrix between the decoder embedding layer 
             # and the pre-softmax linear transformation
-            self.projection.linear.weight = self.decoder.embed_layer.weight
+            self.projection.linear.weight = self.decoder.embed_layer.embedding.weight
         
         if embed_weight_share:
             # share the same weight matrix between the decoder embedding layer 
             # and the encoder embedding layer
             assert enc_vocab_len == dec_vocab_len, "vocab length must be same"
-            self.encoder.embed_layer.weight = self.decoder.embed_layer.weight
+            self.encoder.embed_layer.embedding.weight = self.decoder.embed_layer.embedding.weight
             
     def forward(self, enc, enc_pos, dec, dec_pos):
         """
@@ -142,18 +150,22 @@ class Transformer(nn.Module):
         * dec_pos: (B, T_q)
         -------------------------------------
         Outputs:
-        * dec_output: (B, T_q, d_model)
+        * dec_output: (B*T_q, d_model)
         * attns_dict:
             * enc_self_attns: (n_layer, n_head*B, T, T)
             * dec_self_attns: (n_layer, n_head*B, T_q, T_q)
             * dec_enc_attns: (n_layer, n_haed*B, T_q, T)
         """
-        enc_output, enc_self_attns = self.encoder(enc, enc_pos)
-        dec_output, dec_self_attns, dec_enc_attns = self.decoder(dec, dec_pos, enc, enc_output)
-        dec_output = self.projection(dec_output)
-        attns_dict = {'enc_self_attns': enc_self_attns, 
-                     'dec_self_attns': dec_self_attns,
-                     'dec_enc_attns': dec_enc_attns}
         if self.return_attn:
-            return dec_output, attns_dict
-        return dec_output
+            enc_output, enc_self_attns = self.encoder(enc, enc_pos)
+            dec_output, dec_self_attns, dec_enc_attns = self.decoder(dec, dec_pos, enc, enc_output)
+            dec_output = self.projection(dec_output)
+            attns_dict = {'enc_self_attns': enc_self_attns, 
+                         'dec_self_attns': dec_self_attns,
+                         'dec_enc_attns': dec_enc_attns}
+            return dec_output.view(-1, dec_output.size(2)), attns_dict
+        else:
+            enc_output = self.encoder(enc, enc_pos)
+            dec_output = self.decoder(dec, dec_pos, enc, enc_output)
+            dec_output = self.projection(dec_output)
+            return dec_output.view(-1, dec_output.size(2))

@@ -1,6 +1,9 @@
+# -*- coding utf-8 -*- 
+# author: https://github.com/simonjisu
+
 import torch
 import torch.nn as nn
-from sublayers import MultiHeadAttention, PositionWiseFFN
+from .sublayers import MultiHeadAttention, PositionWiseFFN
 
 
 # Encode Layer

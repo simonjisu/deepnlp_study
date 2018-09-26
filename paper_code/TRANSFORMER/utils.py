@@ -1,3 +1,6 @@
+# -*- coding utf-8 -*- 
+# author: https://github.com/simonjisu
+
 import torch
 import torch.nn as nn
 

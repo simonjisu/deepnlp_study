@@ -1,11 +1,15 @@
+# -*- coding utf-8 -*- 
+# author: https://github.com/simonjisu
+
 import torch
 import torch.nn as nn
+import numpy as np
 
 class ScaledDotProductAttention(nn.Module):
     """Scaled Dot-Product Attention"""
     def __init__(self, d_k):
         super(ScaledDotProductAttention, self).__init__()
-        self.d_k = torch.tensor(d_k).float()
+        self.d_k = d_k
         self.softmax = nn.Softmax(dim=2)
         
     def forward(self, q, k, v, mask=None):
@@ -22,7 +26,7 @@ class ScaledDotProductAttention(nn.Module):
         assert q.size(2) == k.size(2), "d_q = d_k"
         assert k.size(1) == v.size(1), "T_k = T_v"
         attn = torch.bmm(q, k.transpose(1, 2))  # (B, T_q, d_k) * (B, T_k, d_k) -> (B, T_q, T_k)
-        attn = attn / torch.sqrt(self.d_k)
+        attn = attn / np.sqrt(self.d_k)
         # why doing this? 
         # for the large values of d_k, the dot products grow large in magnitude, 
         # pushing the softmax function into regions where it has extremely small gradients

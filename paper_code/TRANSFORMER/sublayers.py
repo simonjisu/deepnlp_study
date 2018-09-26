@@ -1,6 +1,10 @@
+# -*- coding utf-8 -*- 
+# author: https://github.com/simonjisu
+
 import torch
 import torch.nn as nn
-from modules import XavierLinear, ScaledDotProductAttention
+import numpy as np
+from .modules import XavierLinear, ScaledDotProductAttention
 
 # Multi-head Attention
 class MultiHeadAttention(nn.Module):
@@ -100,20 +104,16 @@ class PositionWiseFFN(nn.Module):
 # Positional Encoding
 class PositionalEncoding(nn.Module):
     """Positional Encoding"""
-    def __init__(self, n_pos, d_model, pad_idx=None):
+    def __init__(self, n_pos, d_model):
         """
         n_pos = max sequence length + 1
         """
         super(PositionalEncoding, self).__init__()
         self.n_pos = n_pos
         self.d_model = d_model
-        self.pad_idx = pad_idx
         self.pe_table = np.array(self.get_pe_table())
         self.pe_table[:, 0::2] = np.sin(self.pe_table[:, 0::2])
         self.pe_table[:, 1::2] = np.cos(self.pe_table[:, 1::2])
-        if pad_idx is not None:
-            # zero vector for padding dimension
-            self.pe_table[pad_idx] = 0.
             
         self.pe = nn.Embedding.from_pretrained(torch.FloatTensor(self.pe_table), freeze=True)
         
@@ -125,3 +125,13 @@ class PositionalEncoding(nn.Module):
         
     def forward(self, inputs):
         return self.pe(inputs)
+    
+# Embedding
+class Embedding(nn.Module):
+    def __init__(self, vocab_len, d_model, pad_idx=1):
+        super(Embedding, self).__init__()
+        self.d_model = d_model
+        self.embedding = nn.Embedding(vocab_len, d_model, padding_idx=pad_idx)
+        
+    def forward(self, x):
+        return self.embedding(x) * np.sqrt(self.d_model)
