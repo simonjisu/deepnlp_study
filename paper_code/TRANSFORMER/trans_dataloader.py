@@ -132,7 +132,8 @@ class TranslateDataset(torchdata.Dataset):
         return src, src_pos, trg, trg_pos
     
     def _unicode_to_ascii(self, s):
-        return ''.join( c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn' )
+        return ''.join( c for c in unicodedata.normalize('NFD', s) \
+                       if unicodedata.category(c) != 'Mn' )
 
     def _normalize_string(self, s):
         s = self._unicode_to_ascii(s.lower().strip())

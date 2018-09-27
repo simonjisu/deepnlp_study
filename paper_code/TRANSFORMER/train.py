@@ -122,7 +122,9 @@ def train_model(train_loader, valid_loader, model, optimizer, config, device=Non
         print("--"*20)
         train_loss = run_step(train_loader, model, optimizer, 
                               smoothing=config.SMOOTHING, device=device)
+        torch.cuda.empty_cache()
         valid_loss = validation(valid_loader, model, smoothing=False, device=device)
+        torch.cuda.empty_cache()
         valid_losses.append(valid_loss)
         print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(
             step+1, config.STEP, train_loss, valid_loss))
@@ -131,7 +133,11 @@ def train_model(train_loader, valid_loader, model, optimizer, config, device=Non
             model_state_dict = model.cpu().state_dict()
             model_name = os.path.join(config.SAVE_PATH,'transformer.chkpt')
             torch.save(model_state_dict, model_name)
-            print('** model saved updated!')
+            print('****** model saved updated! ******')
+        
+        if min(valid_losses) < 0.0000001:
+            break
+            print('****** early break!! ******')
 
     end_time = time.time()
     total_time = end_time-start_time
