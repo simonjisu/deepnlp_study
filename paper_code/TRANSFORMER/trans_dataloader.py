@@ -137,7 +137,7 @@ class TranslateDataset(torchdata.Dataset):
     def _normalize_string(self, s):
         s = self._unicode_to_ascii(s.lower().strip())
         s = re.sub(r"([,.!?\"\'\-])", r" \1 ", s)
-        s = re.sub(r"[^a-zA-Z,.!?\"\'\-]+", r" ", s)
+        s = re.sub(r"[^a-zA-Z0-9,.!?\"\'\-]+", r" ", s)
         s = re.sub(r"\s+", r" ", s).strip()
         return s
     

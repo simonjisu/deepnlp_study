@@ -36,7 +36,7 @@ def cal_loss(pred, target, smoothing, pad_idx=1):
 def run_step(loader, model, optimizer, smoothing, device=None):
     model.train()
     loss_per_step = 0
-    
+    eval_every = len(loader) // 5
     for i, batch in enumerate(loader):
         src, src_pos, trg, trg_pos = map(lambda x: x.to(device), batch)
         model.zero_grad()
@@ -51,8 +51,8 @@ def run_step(loader, model, optimizer, smoothing, device=None):
         optimizer.step_and_update_lr()
         total_words = target.ne(model.pad_idx).sum().item()
         loss_per_step += loss.item() / total_words
-        if i % 250 == 0:
-            print(' > [{}/{}] loss_per_step: {:.4f}'.format(i, len(loader), loss.item()))
+        if i % eval_every == 0:
+            print(' > [{}/{}] loss_per_batch: {:.4f}'.format(i, len(loader), loss.item()))
     return loss_per_step
 
 
@@ -120,8 +120,9 @@ def train_model(train_loader, valid_loader, model, optimizer, config, device=Non
     valid_losses = []
     for step in range(config.STEP):
         print("--"*20)
-        train_loss = run_step(train_loader, model, optimizer, smoothing=config.SMOOTHING)
-        valid_loss = validation(valid_loader, model, smoothing=False)
+        train_loss = run_step(train_loader, model, optimizer, 
+                              smoothing=config.SMOOTHING, device=device)
+        valid_loss = validation(valid_loader, model, smoothing=False, device=device)
         valid_losses.append(valid_loss)
         print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(
             step+1, config.STEP, train_loss, valid_loss))

@@ -1,6 +1,6 @@
 #!/bin/sh
 nohup python3 -u main.py \
-    -pth_tr ../../data/translation/de_en_small.txt \
+    -pth_tr ../../data/translation/de_en_big.txt \
     -pth_va ../../data/translation/de_en_small_valid.txt \
     -exts src-trg \
     -stp 10 \

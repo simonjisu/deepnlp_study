@@ -38,8 +38,9 @@ class Encode_Layer(nn.Module):
         # Layer: PositionWiseFFN + Add & Norm
         pw_output = self.pwffn(enc_output)
         enc_output = self.norm_pwffn(enc_output + pw_output)
-        
-        return enc_output, enc_attn
+        if self.return_attn:
+            return enc_output, enc_attn
+        return enc_output
 
 # Decode Layer
 class Decode_Layer(nn.Module):
