@@ -13,10 +13,11 @@ import re
 from common.vocabulary import Vocab
 
 class TranslateDataset(torchdata.Dataset):
-    def __init__(self, path='../data/translation/de_en_small.txt', reverse=False,
+    def __init__(self, path='../data/translation/de_en_small.txt', exts='src-trg', vocab=None,
                  unk='<unk>', pad='<pad>', sos='<s>', eos='</s>', device=None, return_len=False,
                  cons=10e7):
         """
+        if valid: vocab must be a list of tuples like [('src', src_vocab), ('trg', trg_vocab)] 
         return (src, srt_pos), (trg, trg_pos)
         """
         self.device = device
@@ -25,32 +26,14 @@ class TranslateDataset(torchdata.Dataset):
         self.sos_tkn = sos
         self.eos_tkn = eos
         self.cons = cons 
+        self.vocab = vocab
 #         self.return_len = return_len
         
         self.flatten = lambda d: [tkn for sent in d for tkn in sent]
         # call data
         data_dict = self._split_data(path)
-        if not reverse:
-            # de-en
-            # build_vocabulary
-            self.src_vocab = self._build_vocab('src', data_dict)
-            self.trg_vocab = self._build_vocab('trg', data_dict)
-
-            # set_datas
-            self.data = [(s, t) for s, t in zip(data_dict['src'], data_dict['trg'])]
-            self.src_maxlen = data_dict['src_maxlen']+2 if self.sos_tkn is not None else data_dict['src_maxlen']
-            self.trg_maxlen = data_dict['trg_maxlen']+2 if self.sos_tkn is not None else data_dict['trg_maxlen']
-        else:
-            # en-de
-            # build_vocabulary
-            self.src_vocab = self._build_vocab('trg', data_dict)
-            self.trg_vocab = self._build_vocab('src', data_dict)
-
-            # set_datas
-            self.data = [(s, t) for s, t in zip(data_dict['trg'], data_dict['src'])]
-            self.src_maxlen = data_dict['trg_maxlen']+2 if self.sos_tkn is not None else data_dict['trg_maxlen']
-            self.trg_maxlen = data_dict['src_maxlen']+2 if self.sos_tkn is not None else data_dict['src_maxlen']
-            
+        # build_vocabulary & datas
+        self._build_datas(exts, data_dict)
         # TODO: return length of data and sort them
     
     def _split_data(self, path):
@@ -69,6 +52,21 @@ class TranslateDataset(torchdata.Dataset):
                      'trg_maxlen': trg_maxlen}
         
         return data_dict
+    
+    def _build_datas(self, exts, data_dict):
+        assert (exts == 'src-trg') or (exts=='trg-src'), 'Error: exts must be either "src-trg" or "trg-src"'
+        src, trg = exts.split('-')
+        if self.vocab is None:   
+            self.src_vocab = self._build_vocab(src, data_dict)
+            self.trg_vocab = self._build_vocab(trg, data_dict)
+        else:
+            assert isinstance(self.vocab, list), \
+                "if valid: vocab must be a list of tuples like [('src', src_vocab), ('trg', trg_vocab)] "
+            self.src_vocab = dict(self.vocab)[src]
+            self.trg_vocab = dict(self.vocab)[trg]
+        self.data = [(s, t) for s, t in zip(data_dict[src], data_dict[trg])]
+        self.src_maxlen = data_dict[src+'_maxlen']+2 if self.sos_tkn is not None else data_dict[src+'_maxlen']
+        self.trg_maxlen = data_dict[trg+'_maxlen']+2 if self.sos_tkn is not None else data_dict[trg+'_maxlen']
     
     def _build_vocab(self, typ, data_dict):
         vocab = Vocab(unk_tkn=self.unk_tkn, pad_tkn=self.pad_tkn, 

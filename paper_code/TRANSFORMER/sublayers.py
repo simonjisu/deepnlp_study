@@ -9,7 +9,7 @@ from .modules import XavierLinear, ScaledDotProductAttention
 # Multi-head Attention
 class MultiHeadAttention(nn.Module):
     """Multi-head Attention"""
-    def __init__(self, n_head, d_model, d_k, d_v, drop_rate=0.1):
+    def __init__(self, n_head, d_model, d_k, d_v, drop_rate=0.1, return_attn=True):
         """
         paper setting: n_head = 8, d_k = d_v = d_model / n_head = 64
         Multi-head attention allows the model to jointly attend to information from 
@@ -21,11 +21,12 @@ class MultiHeadAttention(nn.Module):
         self.d_model = d_model
         self.d_k = d_k
         self.d_v = d_v
+        self.return_attn = return_attn
         self.linear_q = XavierLinear(d_model, d_k)
         self.linear_k = XavierLinear(d_model, d_k)
         self.linear_v = XavierLinear(d_model, d_v)
         self.linear_o = XavierLinear(n_head*d_v, d_model)
-        self.attention = ScaledDotProductAttention(d_k)
+        self.attention = ScaledDotProductAttention(d_k, return_attn=return_attn)
         self.drop_out = nn.Dropout(drop_rate)
         
     def forward(self, q, k, v, mask=None):
@@ -56,13 +57,18 @@ class MultiHeadAttention(nn.Module):
         # attention: Scaled Dot-Product Attention
         ## heads: (n_head * B, T_q, d_v)
         ## attn: (n_head * B, T_q, T_k)
-        heads, attn = self.attention(q=lin_qs, k=lin_ks, v=lin_vs, mask=mask)
+        if self.return_attn:
+            heads, attn = self.attention(q=lin_qs, k=lin_ks, v=lin_vs, mask=mask)
+        else:
+            heads = self.attention(q=lin_qs, k=lin_ks, v=lin_vs, mask=mask)
         
         # concat
         heads_cat = torch.cat(list(heads.chunk(n_head, dim=0)), dim=-1)  # (n_head * B, T_q, d_v) --> (B, T_q, n_head * d_v)
         output = self.linear_o(heads_cat)  # (B, T_q, n_head * d_v) --> (B, T_q, d_model)
         output = self.drop_out(output)
-        return output, attn
+        if self.return_attn:
+            return output, attn
+        return output
 
 # Position-wise Feed-Forward Networks
 class PositionWiseFFN(nn.Module):

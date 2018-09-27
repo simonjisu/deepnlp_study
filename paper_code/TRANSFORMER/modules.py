@@ -7,8 +7,9 @@ import numpy as np
 
 class ScaledDotProductAttention(nn.Module):
     """Scaled Dot-Product Attention"""
-    def __init__(self, d_k):
+    def __init__(self, d_k, return_attn=True):
         super(ScaledDotProductAttention, self).__init__()
+        self.return_attn = return_attn
         self.d_k = d_k
         self.softmax = nn.Softmax(dim=2)
         
@@ -38,7 +39,9 @@ class ScaledDotProductAttention(nn.Module):
         
         attn = self.softmax(attn)  # (B, T_q, T_k) --> (B, T_q, T_k)
         output = torch.bmm(attn, v)  # (B, T_q, T_k) * (B, T_v, d_v) --> (B, T_q, d_v), make sure that T_k == T_v
-        return output, attn
+        if self.return_attn:
+            return output, attn
+        return output
     
 class XavierLinear(nn.Module):
     def __init__(self, in_features, out_features, bias=True):

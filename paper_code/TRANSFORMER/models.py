@@ -12,7 +12,7 @@ from .utils import get_padding_mask
 # Encoder
 class Encoder(nn.Module):
     def __init__(self, vocab_len, max_seq_len, n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True):
+                 drop_rate=0.1, use_conv=False, return_attn=True, pad_idx=1):
         super(Encoder, self).__init__()
         self.pad_idx = pad_idx
         self.return_attn = return_attn
@@ -20,7 +20,8 @@ class Encoder(nn.Module):
         self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Encode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
-                                                  use_conv=use_conv) \
+                                                  use_conv=use_conv,
+                                                  return_attn=return_attn) \
                                      for i in range(n_layer)])
         
     def forward(self, enc, enc_pos):
@@ -42,9 +43,11 @@ class Encoder(nn.Module):
         
         # forward encode layer
         for enc_layer in self.layers:
-            enc_output, enc_self_attn = enc_layer(enc_input=enc_output, enc_mask=attn_mask)
             if self.return_attn:
+                enc_output, enc_self_attn = enc_layer(enc_input=enc_output, enc_mask=attn_mask)
                 self_attns.append(enc_self_attn)
+            else:
+                enc_output = enc_layer(enc_input=enc_output, enc_mask=attn_mask)
         
         if self.return_attn:
             return enc_output, self_attns
@@ -62,7 +65,8 @@ class Decoder(nn.Module):
         self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Decode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
-                                                  use_conv=use_conv) \
+                                                  use_conv=use_conv,
+                                                  return_attn=return_attn) \
                                      for i in range(n_layer)])
         
     def forward(self, dec, dec_pos, enc, enc_output):
@@ -93,13 +97,16 @@ class Decoder(nn.Module):
         
         # forward decode layer
         for dec_layer in self.layers:
-            dec_output, dec_self_attn, dec_enc_attn = dec_layer(dec_input=dec_output, 
-                                                                enc_output=enc_output, 
-                                                                dec_self_mask=self_attn_mask, 
-                                                                dec_enc_mask=dec_enc_attn_mask)
             if self.return_attn:
+                dec_output, dec_self_attn, dec_enc_attn = dec_layer(dec_input=dec_output, 
+                                                                    enc_output=enc_output, 
+                                                                    dec_self_mask=self_attn_mask, 
+                                                                    dec_enc_mask=dec_enc_attn_mask)
                 self_attns.append(dec_self_attn)
                 dec_enc_attns.append(dec_enc_attn)
+            else:
+                dec_output = dec_layer(dec_input=dec_output, enc_output=enc_output, 
+                                       dec_self_mask=self_attn_mask, dec_enc_mask=dec_enc_attn_mask)
         
         if self.return_attn:
             return dec_output, self_attns, dec_enc_attns
