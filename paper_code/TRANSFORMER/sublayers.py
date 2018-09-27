@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from .modules import XavierLinear, ScaledDotProductAttention
+from modules import XavierLinear, ScaledDotProductAttention
 
 # Multi-head Attention
 class MultiHeadAttention(nn.Module):

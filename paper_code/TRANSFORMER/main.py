@@ -1,7 +1,6 @@
 import argparse
 import torch
-from .train import build_dataloader, build_model_optimizer, train
-
+from train import build_dataloader, build_model_optimizer, train_model
 
 def main():
     parser = argparse.ArgumentParser(description='TRANSFORMER argument parser')
@@ -33,12 +32,13 @@ def main():
     parser.add_argument('-svp', '--SAVE_PATH', help='Model path', type=str, default='./model/')
     
     config = parser.parse_args()
+    print(config)
     if config.USE_CUDA:
         assert config.USE_CUDA == torch.cuda.is_available(), 'cuda is not avaliable.'
     DEVICE = 'cuda' if config.USE_CUDA else None
-    train, valid, train_loader, target_loader = build_dataloader(config)
+    train, valid, train_loader, valid_loader = build_dataloader(config)
     model, optimizer = build_model_optimizer(config, train, device=DEVICE)
-    train(train_loader, valid_loader, model, optimizer, config, device=DEVICE)
+    train_model(train_loader, valid_loader, model, optimizer, config, device=DEVICE)
     
 if __name__ == '__main__':
     main()

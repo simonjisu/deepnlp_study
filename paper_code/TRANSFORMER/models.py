@@ -4,10 +4,10 @@
 import torch
 import torch.nn as nn
 
-from .layers import Encode_Layer, Decode_Layer
-from .sublayers import PositionalEncoding, Embedding
-from .modules import XavierLinear
-from .utils import get_padding_mask
+from layers import Encode_Layer, Decode_Layer
+from sublayers import PositionalEncoding, Embedding
+from modules import XavierLinear
+from utils import get_padding_mask
 
 # Encoder
 class Encoder(nn.Module):

@@ -1,16 +1,9 @@
-# -*- coding utf-8 -*- 
-# author: https://github.com/simonjisu
-
-import os
-import sys
-sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
-
 import torch
 import torch.utils.data as torchdata
 import numpy as np
 import unicodedata
 import re
-from common.vocabulary import Vocab
+from vocabulary import Vocab
 
 class TranslateDataset(torchdata.Dataset):
     def __init__(self, path='../data/translation/de_en_small.txt', exts='src-trg', vocab=None,

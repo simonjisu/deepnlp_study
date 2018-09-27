@@ -5,7 +5,7 @@ nohup python3 -u main.py \
     -exts src-trg \
     -stp 30 \
     -bs 32 \
-    -cuda True \
+    -cuda \
     -nl 3 \
     -nh 6 \
     -dk 32 \

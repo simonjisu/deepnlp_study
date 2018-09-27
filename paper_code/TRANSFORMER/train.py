@@ -6,46 +6,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as torchdata
 
-from .models import Transformer
-from .dataloader import TranslateDataset
-
-
-class ScheduledOptim(object):
-    """
-    A simple wrapper class for learning rate scheduling
-    borrowed from: 
-    https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/transformer/Optim.py
-    """
-
-    def __init__(self, optimizer, d_model, n_warmup_steps):
-        self._optimizer = optimizer
-        self.n_warmup_steps = n_warmup_steps
-        self.n_current_steps = 0
-        self.init_lr = np.power(d_model, -0.5)
-
-    def step_and_update_lr(self):
-        "Step with the inner optimizer"
-        self._update_learning_rate()
-        self._optimizer.step()
-
-    def zero_grad(self):
-        "Zero out the gradients by the inner optimizer"
-        self._optimizer.zero_grad()
-
-    def _get_lr_scale(self):
-        return np.min([
-            np.power(self.n_current_steps, -0.5),
-            np.power(self.n_warmup_steps, -1.5) * self.n_current_steps])
-
-    def _update_learning_rate(self):
-        ''' Learning rate scheduling per step '''
-
-        self.n_current_steps += 1
-        lr = self.init_lr * self._get_lr_scale()
-
-        for param_group in self._optimizer.param_groups:
-            param_group['lr'] = lr
-
+from models import Transformer
+from trans_dataloader import TranslateDataset
+from schoptim import ScheduledOptim
             
 def cal_loss(pred, target, smoothing, pad_idx=1):
     """
@@ -137,7 +100,8 @@ def build_model_optimizer(config, train, device=None):
 
 def build_dataloader(config):
     train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS)
-    valid = TranslateDataset(path=config.VALID_PATH, vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)])
+    valid = TranslateDataset(path=config.VALID_PATH, 
+                             vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)])
     train_loader = torchdata.DataLoader(dataset=train,
                                     collate_fn=train.collate_fn,
                                     batch_size=config.BATCH, 
@@ -148,18 +112,20 @@ def build_dataloader(config):
                                         batch_size=config.BATCH, 
                                         shuffle=True, 
                                         drop_last=False)
-    return train, valid, train_loader, target_loader
+    return train, valid, train_loader, valid_loader
 
 
-def train(train_loader, valid_loader, model, optimizer, config, device=None):
+def train_model(train_loader, valid_loader, model, optimizer, config, device=None):
     start_time = time.time()
     valid_losses = []
-    for step in range(STEP):
+    for step in range(config.STEP):
         print("--"*20)
         train_loss = run_step(train_loader, model, optimizer, smoothing=config.SMOOTHING)
         valid_loss = validation(valid_loader, model, smoothing=False)
         valid_losses.append(valid_loss)
-        print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(step+1, config.STEP, train_loss, valid_loss))
+        print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(
+            step+1, config.STEP, train_loss, valid_loss))
+        
         if config.SAVE_MODEL & (step > 0) & (valid_loss < min(valid_losses)):
             model_state_dict = model.cpu().state_dict()
             model_name = os.path.join(config.SAVE_PATH,'transformer.chkpt')
@@ -171,5 +137,5 @@ def train(train_loader, valid_loader, model, optimizer, config, device=None):
     hour = int(total_time // (60*60))
     minute = int((total_time - hour*60*60) // 60)
     second = total_time - hour*60*60 - minute*60
-    print('Training Excution time with validation: {:d} h {:d} m {:.4f} s'.format(hour, minute, second))
+    print('\nTraining Excution time with validation: {:d} h {:d} m {:.4f} s'.format(hour, minute, second))
     
