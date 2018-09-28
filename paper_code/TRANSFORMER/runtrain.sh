@@ -3,7 +3,7 @@ nohup python3 -u main.py \
     -pth_tr ../../data/translation/de_en_small.txt \
     -pth_va ../../data/translation/de_en_small_valid.txt \
     -exts src-trg \
-    -stp 10 \
+    -stp 3 \
     -bs 32 \
     -cuda \
     -nl 3 \
@@ -16,4 +16,4 @@ nohup python3 -u main.py \
     -lws \
     -warm 4000 \
     -save \
-    -svp ./model/ > ./transformer.log &
+    -svp ./model/transfomer > ./transformer.log &

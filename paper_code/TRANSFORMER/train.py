@@ -1,4 +1,5 @@
-import os
+# coding: utf-8
+# author: simonjisu
 import numpy as np
 import time
 import torch
@@ -34,6 +35,7 @@ def cal_loss(pred, target, smoothing, pad_idx=1):
 
 
 def run_step(loader, model, optimizer, smoothing, device=None):
+    model = model.to(device)
     model.train()
     loss_per_step = 0
     eval_every = len(loader) // 5
@@ -129,15 +131,14 @@ def train_model(train_loader, valid_loader, model, optimizer, config, device=Non
         print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(
             step+1, config.STEP, train_loss, valid_loss))
         
-        if config.SAVE_MODEL & (step > 0) & (valid_loss < min(valid_losses)):
-            model_state_dict = model.cpu().state_dict()
-            model_name = os.path.join(config.SAVE_PATH,'transformer.chkpt')
-            torch.save(model_state_dict, model_name)
+        if config.SAVE_MODEL:
+            model_path = config.SAVE_PATH + '{}_{:.4f}'.format(step, valid_loss)
+            torch.save(model.cpu().state_dict(), model_path)
             print('****** model saved updated! ******')
         
-        if min(valid_losses) < 0.0000001:
-            break
-            print('****** early break!! ******')
+            if valid_loss < 0.00000001:
+                print('****** early break!! ******')
+                breaks
 
     end_time = time.time()
     total_time = end_time-start_time

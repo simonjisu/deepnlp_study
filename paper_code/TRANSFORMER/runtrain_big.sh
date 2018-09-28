@@ -7,11 +7,11 @@ nohup python3 -u main.py \
     -bs 32 \
     -cuda \
     -nl 3 \
-    -nh 6 \
+    -nh 5 \
     -dk 32 \
     -dv 32 \
-    -dm 192 \
-    -df 576 \
+    -dm 160 \
+    -df 320 \
     -drop 0.1 \
     -lws \
     -warm 4000 \
