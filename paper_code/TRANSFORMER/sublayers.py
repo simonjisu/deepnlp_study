@@ -22,9 +22,9 @@ class MultiHeadAttention(nn.Module):
         self.d_k = d_k
         self.d_v = d_v
         self.return_attn = return_attn
-        self.linear_q = XavierLinear(d_model, d_k)
-        self.linear_k = XavierLinear(d_model, d_k)
-        self.linear_v = XavierLinear(d_model, d_v)
+        self.linear_q = XavierLinear(d_model, n_head*d_k)
+        self.linear_k = XavierLinear(d_model, n_head*d_k)
+        self.linear_v = XavierLinear(d_model, n_head*d_v)
         self.linear_o = XavierLinear(n_head*d_v, d_model)
         self.attention = ScaledDotProductAttention(d_k, return_attn=return_attn)
         self.drop_out = nn.Dropout(drop_rate)
@@ -35,25 +35,23 @@ class MultiHeadAttention(nn.Module):
         * q: (B, T_q, d_model)
         * k: (B, T_k, d_model)
         * v: (B, T_v, d_model)
+        * mask: (B, T_q, T_k)
         ---------------------
         Outputs:
         * output: (B, T_q, d_model)
         * attn: (n_head * B, T_q, T_k)
         """
         n_head, d_model, d_k, d_v = self.n_head, self.d_model, self.d_k, self.d_v
-        
-        # repeat to compute n_heads
-        n_qs = q.repeat(n_head, 1, 1)  # (n_head * B, T_q, d_model)
-        n_ks = k.repeat(n_head, 1, 1)  # (n_head * B, T_k, d_model)
-        n_vs = v.repeat(n_head, 1, 1)  # (n_head * B, T_v, d_model)
+        B, T_q, _ = q.size()
+        B, T_k, _ = k.size()
+        B, T_v, _ = v.size()
+        # through linear layer: 
+        lin_qs = self.linear_q(q).view(n_head*B, T_q, -1)  # (B, T_q, d_model) --> (n_head * B, T_q, d_k)
+        lin_ks = self.linear_k(k).view(n_head*B, T_k, -1)  # (B, T_k, d_model) --> (n_head * B, T_k, d_k) 
+        lin_vs = self.linear_v(v).view(n_head*B, T_v, -1)  # (B, T_v, d_model) --> (n_head * B, T_v, d_v)
         if mask is not None:
             mask = mask.repeat(n_head, 1, 1)
-        
-        # through linear layer: 
-        lin_qs = self.linear_q(n_qs)  # (n_head * B, T_q, d_model) --> (n_head * B, T_q, d_k) 
-        lin_ks = self.linear_q(n_ks)  # (n_head * B, T_k, d_model) --> (n_head * B, T_k, d_k) 
-        lin_vs = self.linear_q(n_vs)  # (n_head * B, T_v, d_model) --> (n_head * B, T_v, d_v)
-        
+
         # attention: Scaled Dot-Product Attention
         ## heads: (n_head * B, T_q, d_v)
         ## attn: (n_head * B, T_q, T_k)
@@ -61,7 +59,6 @@ class MultiHeadAttention(nn.Module):
             heads, attn = self.attention(q=lin_qs, k=lin_ks, v=lin_vs, mask=mask)
         else:
             heads = self.attention(q=lin_qs, k=lin_ks, v=lin_vs, mask=mask)
-        
         # concat
         heads_cat = torch.cat(list(heads.chunk(n_head, dim=0)), dim=-1)  # (n_head * B, T_q, d_v) --> (B, T_q, n_head * d_v)
         output = self.linear_o(heads_cat)  # (B, T_q, n_head * d_v) --> (B, T_q, d_model)
@@ -69,6 +66,7 @@ class MultiHeadAttention(nn.Module):
         if self.return_attn:
             return output, attn
         return output
+    
 
 # Position-wise Feed-Forward Networks
 class PositionWiseFFN(nn.Module):
@@ -134,7 +132,7 @@ class PositionalEncoding(nn.Module):
     
 # Embedding
 class Embedding(nn.Module):
-    def __init__(self, vocab_len, d_model, pad_idx=1):
+    def __init__(self, vocab_len, d_model, pad_idx=0):
         super(Embedding, self).__init__()
         self.d_model = d_model
         self.embedding = nn.Embedding(vocab_len, d_model, padding_idx=pad_idx)

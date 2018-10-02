@@ -1,0 +1,25 @@
+#!/bin/sh
+nohup python3 -u main.py \
+    -pth_tr ../../data/translation/en_fa2.train \
+    -pth_va ../../data/translation/en_fa2.valid \
+    -exts src-trg \
+    -stp 10 \
+    -bs 32 \
+    -sos "<s>" \
+    -eos "</s>" \
+    -cuda \
+    -emptymem \
+    -nl 6 \
+    -nh 8 \
+    -dk 64 \
+    -dv 64 \
+    -dm 512 \
+    -df 2048 \
+    -drop 0.1 \
+    -thres 0.999 \
+    -lws \
+    -eps 0.1 \
+    -warm 4000 \
+    -save \
+    -savebest \
+    -svp ./model/enfa.chkpt > ./logs/trans_enfa.log &

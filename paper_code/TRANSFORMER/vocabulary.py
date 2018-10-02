@@ -10,7 +10,7 @@ class Vocab(object):
         self.sos_tkn = sos_tkn
         self.eos_tkn = eos_tkn
         
-    def build_vocab(self, all_tokens, unk_idx=0, pad_idx=1, sos_idx=2, eos_idx=3):
+    def build_vocab(self, all_tokens, pad_idx=0, unk_idx=1, sos_idx=2, eos_idx=3):
         """
         all_tokens ndim = 2
         """

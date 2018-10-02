@@ -10,71 +10,74 @@ import torch.utils.data as torchdata
 from models import Transformer
 from trans_dataloader import TranslateDataset
 from schoptim import ScheduledOptim
-            
-def cal_loss(pred, target, smoothing, pad_idx=1):
-    """
-    Calculate cross entropy loss, apply label smoothing if needed. 
-    borrowed from: 
-    https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/train.py
-    """
-    target = target.contiguous().view(-1)
-    if smoothing:
-        eps = 0.1
-        n_class = pred.size(1)
+from lbs import LabelSmoothing
 
-        one_hot = torch.zeros_like(pred).scatter(1, target.view(-1, 1), 1)
-        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
-        log_prb = F.log_softmax(pred, dim=1)
+def cal_performance(pred, target, loss_function, pad_idx=0):
+    loss = loss_function(pred, target)
 
-        non_pad_mask = target.ne(pad_idx)
-        loss = -(one_hot * log_prb).sum(dim=1)
-        loss = loss.masked_select(non_pad_mask).sum()  # average later
-    else:
-        loss = F.cross_entropy(pred, target, ignore_index=pad_idx, reduction='sum')
-    return loss
+    pred = pred.max(1)[1]
+    non_pad_mask = target.view(-1).ne(pad_idx)
+    n_correct = pred.eq(target.view(-1))
+    n_correct = n_correct.masked_select(non_pad_mask).sum().item()
+
+    return loss, n_correct
 
 
-def run_step(loader, model, optimizer, smoothing, device=None):
+def run_step(loader, model, optimizer, loss_function, device=None):
     model = model.to(device)
     model.train()
     loss_per_step = 0
+    total_words = 0
+    correct_words = 0
     eval_every = len(loader) // 5
     for i, batch in enumerate(loader):
         src, src_pos, trg, trg_pos = map(lambda x: x.to(device), batch)
         model.zero_grad()
         # forward
         output = model(enc=src, enc_pos=src_pos, dec=trg, dec_pos=trg_pos)
-        # eval
+        # loss and backward
         pred = output.cpu()
-        target = trg.cpu().view(-1)
-        loss = cal_loss(pred, target, smoothing, pad_idx=model.pad_idx)
+        target = trg.cpu()
+        loss, n_correct = cal_performance(pred, target, loss_function, pad_idx=model.pad_idx)
         loss.backward()        
         # update parameters
         optimizer.step_and_update_lr()
-        total_words = target.ne(model.pad_idx).sum().item()
-        loss_per_step += loss.item() / total_words
+        
+        # eval
+        n_words = target.view(-1).ne(model.pad_idx).sum().item()
+        total_words += n_words
+        correct_words += n_correct
+        loss_per_step += loss.item()
         if i % eval_every == 0:
-            print(' > [{}/{}] loss_per_batch: {:.4f}'.format(i, len(loader), loss.item()))
-    return loss_per_step
+            print(' > [{}/{}] loss_per_batch: {:.4f}'.format(i, len(loader), loss.item()/n_words))
+    accuracy = correct_words / total_words
+    loss_per_step = loss_per_step / total_words
+    return loss_per_step, accuracy
 
 
-def validation(loader, model, smoothing=False, device=None):
+def validation(loader, model, loss_function, device=None):
     model.eval()
     loss_per_step = 0
-    
+    total_words = 0
+    correct_words = 0
     for i, batch in enumerate(loader):
         src, src_pos, trg, trg_pos = map(lambda x: x.to(device), batch)
         model.zero_grad()
         # forward
         output = model(enc=src, enc_pos=src_pos, dec=trg, dec_pos=trg_pos)
-        # eval
+        # loss and backward
         pred = output.cpu()
-        target = trg.cpu().view(-1)
-        loss = cal_loss(pred, target, smoothing, pad_idx=model.pad_idx)
-
-        total_words = target.ne(model.pad_idx).sum().item()
-        loss_per_step += loss.item() / total_words
-    return loss_per_step
+        target = trg.cpu()
+        loss, n_correct = cal_performance(pred, target, loss_function, pad_idx=model.pad_idx)
+        # eval
+        n_words = target.view(-1).ne(model.pad_idx).sum().item()
+        total_words += n_words
+        correct_words += n_correct
+        loss_per_step += loss.item()
+        
+    accuracy = correct_words / total_words
+    loss_per_step = loss_per_step / total_words
+    return loss_per_step, accuracy
 
 
 def build_model_optimizer(config, train, device=None):
@@ -98,11 +101,15 @@ def build_model_optimizer(config, train, device=None):
                            betas=(0.9, 0.98), eps=1e-09), 
                            config.D_MODEL, 
                            config.WARMUP)
-    return model, optimizer
+    loss_function = LabelSmoothing(trg_vocab_size=len(train.trg_vocab.stoi), 
+                                   pad_idx=train.src_vocab.stoi['<pad>'], 
+                                   eps=config.EPS)
+    return model, optimizer, loss_function
+
 
 def build_dataloader(config):
-    train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS)
-    valid = TranslateDataset(path=config.VALID_PATH, 
+    train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS, sos=config.SOS, eos=config.EOS)
+    valid = TranslateDataset(path=config.VALID_PATH, sos=config.SOS, eos=config.EOS,
                              vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)])
     train_loader = torchdata.DataLoader(dataset=train,
                                     collate_fn=train.collate_fn,
@@ -117,28 +124,39 @@ def build_dataloader(config):
     return train, valid, train_loader, valid_loader
 
 
-def train_model(train_loader, valid_loader, model, optimizer, config, device=None):
+def train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=None):
     start_time = time.time()
-    valid_losses = []
+    valid_losses = [9999]
     for step in range(config.STEP):
         print("--"*20)
-        train_loss = run_step(train_loader, model, optimizer, 
-                              smoothing=config.SMOOTHING, device=device)
-        torch.cuda.empty_cache()
-        valid_loss = validation(valid_loader, model, smoothing=False, device=device)
-        torch.cuda.empty_cache()
+        train_loss, train_acc = run_step(train_loader, model, optimizer, loss_function, device=device)
+        if config.EMPTY_CUDA_MEMORY:
+            torch.cuda.empty_cache()
+        valid_loss, valid_acc = validation(valid_loader, model, loss_function, device=device)
+        if config.EMPTY_CUDA_MEMORY:
+            torch.cuda.empty_cache()
         valid_losses.append(valid_loss)
-        print('[{}/{}] train: {:.4f}, valid: {:.4f} \n'.format(
-            step+1, config.STEP, train_loss, valid_loss))
-        
+        print('[{}/{}] (train) loss {:.4f}, acc {:.4f} | (valid) loss {:.4f}, acc {:.4f} \n'.format(
+            step+1, config.STEP, train_loss, train_acc, valid_loss, valid_acc))
+
+        # Save model
         if config.SAVE_MODEL:
-            model_path = config.SAVE_PATH + '{}_{:.4f}'.format(step, valid_loss)
-            torch.save(model.cpu().state_dict(), model_path)
-            print('****** model saved updated! ******')
-        
-            if valid_loss < 0.00000001:
-                print('****** early break!! ******')
-                breaks
+            if config.SAVE_BEST:
+                if valid_loss <= min(valid_losses):
+                    torch.save(model.state_dict(), config.SAVE_PATH)
+                    print('****** model saved updated! ******')
+
+                if valid_acc > config.THRES:
+                    print('****** early break!! ******')
+                    break
+            else:
+                model_path = config.SAVE_PATH + '{}_{:.4f}_{:.4f}'.format(step, train_acc, valid_acc)
+                torch.save(model.state_dict(), model_path)
+                print('****** model saved updated! ******')
+
+                if valid_acc > config.THRES:
+                    print('****** early break!! ******')
+                    break
 
     end_time = time.time()
     total_time = end_time-start_time

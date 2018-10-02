@@ -12,10 +12,11 @@ from utils import get_padding_mask
 # Encoder
 class Encoder(nn.Module):
     def __init__(self, vocab_len, max_seq_len, n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 drop_rate=0.1, use_conv=False, return_attn=True, pad_idx=1):
+                 drop_rate=0.1, use_conv=False, return_attn=True, pad_idx=0):
         super(Encoder, self).__init__()
         self.pad_idx = pad_idx
         self.return_attn = return_attn
+        self.dropout = nn.Dropout(drop_rate)
         self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
         self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Encode_Layer(n_head, d_model, d_k, d_v, d_f, 
@@ -32,7 +33,7 @@ class Encoder(nn.Module):
         -------------------------------------
         Outputs:
         * enc_output: (B, T, d_model)
-        * self_attns: (n_layer, n_head*B, T, T)
+        * self_attns: (n_head*B, T, T)
         """
         self_attns = []  # (n_layer, n_head*B, T, T)
         # self attention padding mask: (B, T, T)
@@ -40,7 +41,7 @@ class Encoder(nn.Module):
         
         # embedding + position encoding: (B, T) --> (B, T, d_model)
         enc_output = self.embed_layer(enc) + self.pos_layer(enc_pos)
-        
+        enc_output = self.dropout(enc_output)
         # forward encode layer
         for enc_layer in self.layers:
             if self.return_attn:
@@ -57,10 +58,11 @@ class Encoder(nn.Module):
 # Decoder
 class Decoder(nn.Module):
     def __init__(self, vocab_len, max_seq_len, n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True):
+                 pad_idx=0, drop_rate=0.1, use_conv=False, return_attn=True):
         super(Decoder, self).__init__()
         self.pad_idx = pad_idx
         self.return_attn = return_attn
+        self.dropout = nn.Dropout(drop_rate)
         self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
         self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
         self.layers = nn.ModuleList([Decode_Layer(n_head, d_model, d_k, d_v, d_f, 
@@ -79,8 +81,8 @@ class Decoder(nn.Module):
         -------------------------------------
         Outputs:
         * dec_output: (B, T_q, d_model)
-        * self_attns: (n_layer, n_head*B, T_q, T_q)
-        * dec_enc_attns: (n_layer, n_haed*B, T_q, T)
+        * self_attns: (n_head*B, T_q, T_q)
+        * dec_enc_attns: (n_haed*B, T_q, T)
         """
         self_attns = []  # (n_layer, n_head*B, T_q, T_q)
         dec_enc_attns = []  # (n_layer, n_head*B, T_q, T)
@@ -94,7 +96,7 @@ class Decoder(nn.Module):
         
         # embedding + position encoding: (B, T) --> (B, T, d_model)
         dec_output = self.embed_layer(dec) + self.pos_layer(dec_pos)
-        
+        dec_output = self.dropout(dec_output)
         # forward decode layer
         for dec_layer in self.layers:
             if self.return_attn:
@@ -117,7 +119,7 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(self, enc_vocab_len, enc_max_seq_len, dec_vocab_len, dec_max_seq_len, 
                  n_layer, n_head, d_model, d_k, d_v, d_f, 
-                 pad_idx=1, drop_rate=0.1, use_conv=False, return_attn=True,
+                 pad_idx=0, drop_rate=0.1, use_conv=False, return_attn=True,
                  linear_weight_share=True, embed_weight_share=True):
         super(Transformer, self).__init__()
         self.return_attn = return_attn
@@ -159,9 +161,9 @@ class Transformer(nn.Module):
         Outputs:
         * dec_output: (B*T_q, d_model)
         * attns_dict:
-            * enc_self_attns: (n_layer, n_head*B, T, T)
-            * dec_self_attns: (n_layer, n_head*B, T_q, T_q)
-            * dec_enc_attns: (n_layer, n_haed*B, T_q, T)
+            * enc_self_attns: (n_head*B, T, T)
+            * dec_self_attns: (n_head*B, T_q, T_q)
+            * dec_enc_attns: (n_haed*B, T_q, T)
         """
         if self.return_attn:
             enc_output, enc_self_attns = self.encoder(enc, enc_pos)

@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 
-def get_padding_mask(q, k=None, pad_idx=0, mode='attn'):
+def get_padding_mask(q, k=None, pad_idx=1, mode='attn'):
     """
     mode: attn
     > mask out for pad in attention with queries & keys sequences

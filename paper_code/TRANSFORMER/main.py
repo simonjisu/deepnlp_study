@@ -8,10 +8,12 @@ def main():
     parser.add_argument('-pth_tr', '--TRAIN_PATH', help='location of path where your train data is located, must be tsv seperated in translation task', required=True)
     parser.add_argument('-pth_va', '--VALID_PATH', help='location of path where your valid data is located, must be tsv seperated in translation task', required=True)
     parser.add_argument('-exts', '--EXTS', help='"Source to Target" or "Target to source"', type=str, default='src-trg')
+    parser.add_argument('-sos', '--SOS', help='Start of sentence token', default=None)
+    parser.add_argument('-eos', '--EOS', help='End of sentence token', default=None)
     parser.add_argument('-stp', '--STEP', help='Trainging Steps', type=int, default=10)
     parser.add_argument('-bs', '--BATCH', help='Batch Size', type=int, default=64)
     parser.add_argument('-cuda', '--USE_CUDA', help='Use cuda if exists', action='store_true')
-    
+    parser.add_argument('-emptymem', '--EMPTY_CUDA_MEMORY', help='Use cuda empty cashce', action='store_true')
     # model
     parser.add_argument('-nl', '--N_LAYER', help='Number of layers in Transformer Model', type=int, default=6)
     parser.add_argument('-nh', '--N_HEAD', help='Number of layers in Multihead Attention', type=int, default=8)
@@ -26,10 +28,12 @@ def main():
     parser.add_argument('-ews', '--EMBED_WS', help='Embed weight share between encoder and decoder', action='store_true')
     
     # eval & save model
-    parser.add_argument('-smooth', '--SMOOTHING', help='Label smoothing', action='store_true')
+    parser.add_argument('-thres', '--THRES', help='Threshold for earlystopping',type=float, default=0.9999)
+    parser.add_argument('-eps', '--EPS', help='Label Smoothing',type=float, default=0.1)
     parser.add_argument('-warm', '--WARMUP', help='Warmup size in optimizer', type=int, default=4000)
     parser.add_argument('-save', '--SAVE_MODEL', help='Save model', action='store_true')
     parser.add_argument('-svp', '--SAVE_PATH', help='Model path', type=str, default='./model/')
+    parser.add_argument('-savebest', '--SAVE_BEST', help='Save model', action='store_true')
     
     config = parser.parse_args()
     print(config)
@@ -37,8 +41,8 @@ def main():
         assert config.USE_CUDA == torch.cuda.is_available(), 'cuda is not avaliable.'
     DEVICE = 'cuda' if config.USE_CUDA else None
     train, valid, train_loader, valid_loader = build_dataloader(config)
-    model, optimizer = build_model_optimizer(config, train, device=DEVICE)
-    train_model(train_loader, valid_loader, model, optimizer, config, device=DEVICE)
+    model, optimizer, loss_function = build_model_optimizer(config, train, device=DEVICE)
+    train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=DEVICE)
     
 if __name__ == '__main__':
     main()
