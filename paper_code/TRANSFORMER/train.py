@@ -6,18 +6,19 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data as torchdata
-
+# custom
 from models import Transformer
 from trans_dataloader import TranslateDataset
 from schoptim import ScheduledOptim
 from lbs import LabelSmoothing
-#
+# iswlt
 from torchtext.data import Field, Iterator
 from torchtext import datasets
 import spacy
 
 
 def get_pos(x, pad_idx=1, pospad_idx=0):
+    """get_pos function for ISWLT dataset"""
     B, T = x.size()
     pos = torch.arange(1, T+1).expand(B, -1)
     padding_mask = (x == pad_idx)
@@ -26,8 +27,9 @@ def get_pos(x, pad_idx=1, pospad_idx=0):
 
 
 def cal_performance(pred, target, loss_function, pad_idx=0):
+    """calculate performance: loss & accuracy"""
     loss = loss_function(pred, target)
-
+    
     pred = pred.max(1)[1]
     non_pad_mask = target.view(-1).ne(pad_idx)
     n_correct = pred.eq(target.view(-1))
@@ -54,8 +56,8 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
         # forward
         output = model(enc=src, enc_pos=src_pos, dec=trg, dec_pos=trg_pos)
         # loss and backward
-        pred = output.cpu()
-        target = trg.cpu()
+        pred = output.to('cpu')
+        target = trg.to('cpu')
         loss, n_correct = cal_performance(pred, target, loss_function, pad_idx=model.pad_idx)
         loss.backward()        
         # update parameters
@@ -70,7 +72,8 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
         if i % eval_every == 0:
             end_time = time.time()
             total_time = end_time-start_time
-            print(' > [{}/{:.2f}] loss_per_batch: {:.4f} time: {:.1f} s'.format(i, i/len(loader)*100, loss.item()/n_words, total_time))
+            print(' > [{}/{:.2f}] loss_per_batch: {:.4f} time: {:.1f} s'.format(
+                i, i/len(loader)*100, loss.item()/n_words, total_time))
             start_time = time.time()
             
     accuracy = correct_words / total_words
@@ -92,8 +95,8 @@ def validation(loader, model, loss_function, config, device=None):
         # forward
         output = model(enc=src, enc_pos=src_pos, dec=trg, dec_pos=trg_pos)
         # loss and backward
-        pred = output.cpu()
-        target = trg.cpu()
+        pred = output.to('cpu')
+        target = trg.to('cpu')
         loss, n_correct = cal_performance(pred, target, loss_function, pad_idx=model.pad_idx)
         # eval
         n_words = target.view(-1).ne(model.pad_idx).sum().item()
