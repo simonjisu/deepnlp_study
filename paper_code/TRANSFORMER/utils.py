@@ -4,6 +4,7 @@
 import torch
 import torch.nn as nn
 
+
 def get_padding_mask(q, k=None, pad_idx=1, mode='attn'):
     """
     mode: attn
@@ -19,6 +20,10 @@ def get_padding_mask(q, k=None, pad_idx=1, mode='attn'):
         padding_mask = k.eq(pad_idx)
         padding_mask = padding_mask.unsqueeze(1).expand(B, q_len, -1)
         return padding_mask
+    elif mode == 'nonpad':
+        # to mask out pad rows
+        assert k is None, "don't need key sequences"
+        return q.ne(pad_idx).type(torch.float).unsqueeze(-1)
     elif mode =='subseq':
         assert k is None, "don't need key sequences"
         subseq_mask = torch.triu(torch.ones((q_len, q_len), device=q.device, dtype=torch.uint8), 

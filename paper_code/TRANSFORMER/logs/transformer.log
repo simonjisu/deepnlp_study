@@ -1,0 +1,3 @@
+Namespace(BATCH=16, DROP_RATE=0.1, D_F=1024, D_K=64, D_MODEL=512, D_V=64, EMBED_WS=False, EMPTY_CUDA_MEMORY=True, EOS='</s>', EPS=0.1, EXTS='src-trg', IWSLT=True, LINEAR_WS=True, MAX_LEN=100, MIN_FREQ=2, N_HEAD=8, N_LAYER=6, RETURN_ATTN=False, SAVE_BEST=True, SAVE_MODEL=True, SAVE_PATH='./model/transformer.chkpt', SOS='<s>', STEP=10, THRES=0.999, TRAIN_PATH='../../data/', USE_CONV=False, USE_CUDA=True, VALID_PATH=None, WARMUP=4000)
+----------------------------------------
+ > [0/0.00] loss_per_batch: 75.7239 time: 1.0 s

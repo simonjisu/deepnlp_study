@@ -46,9 +46,16 @@ class MultiHeadAttention(nn.Module):
         B, T_k, _ = k.size()
         B, T_v, _ = v.size()
         # through linear layer: 
-        lin_qs = self.linear_q(q).view(n_head*B, T_q, -1)  # (B, T_q, d_model) --> (n_head * B, T_q, d_k)
-        lin_ks = self.linear_k(k).view(n_head*B, T_k, -1)  # (B, T_k, d_model) --> (n_head * B, T_k, d_k) 
-        lin_vs = self.linear_v(v).view(n_head*B, T_v, -1)  # (B, T_v, d_model) --> (n_head * B, T_v, d_v)
+        # lin_qs : (B, T_q, d_model) --> (B, T_q, n_head * d_k) --> (n_head * B, T_q, d_k)
+        # lin_ks : (B, T_k, d_model) --> (B, T_k, n_head * d_k) --> (n_head * B, T_k, d_k) 
+        # lin_vs : (B, T_v, d_model) --> (B, T_v, n_head * d_v) --> (n_head * B, T_v, d_v)
+        lin_qs = self.linear_q(q).view(B, T_q, n_head, d_k)  
+        lin_ks = self.linear_k(k).view(B, T_k, n_head, d_k)  
+        lin_vs = self.linear_v(v).view(B, T_v, n_head, d_v)  
+        lin_qs = lin_qs.permute(2, 0, 1, 3).contiguous().view(-1, T_q, d_k)
+        lin_ks = lin_ks.permute(2, 0, 1, 3).contiguous().view(-1, T_k, d_k)
+        lin_vs = lin_vs.permute(2, 0, 1, 3).contiguous().view(-1, T_v, d_v)
+        
         if mask is not None:
             mask = mask.repeat(n_head, 1, 1)
 

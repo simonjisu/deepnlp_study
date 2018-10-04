@@ -38,17 +38,21 @@ class Encoder(nn.Module):
         self_attns = []  # (n_layer, n_head*B, T, T)
         # self attention padding mask: (B, T, T)
         attn_mask = get_padding_mask(q=enc, k=enc, pad_idx=self.pad_idx, mode='attn')
-        
+        non_pad_mask = get_padding_mask(q=enc, pad_idx=self.pad_idx, mode='nonpad')
         # embedding + position encoding: (B, T) --> (B, T, d_model)
         enc_output = self.embed_layer(enc) + self.pos_layer(enc_pos)
         enc_output = self.dropout(enc_output)
         # forward encode layer
         for enc_layer in self.layers:
             if self.return_attn:
-                enc_output, enc_self_attn = enc_layer(enc_input=enc_output, enc_mask=attn_mask)
+                enc_output, enc_self_attn = enc_layer(enc_input=enc_output, 
+                                                      enc_mask=attn_mask, 
+                                                      non_pad_mask=non_pad_mask)
                 self_attns.append(enc_self_attn)
             else:
-                enc_output = enc_layer(enc_input=enc_output, enc_mask=attn_mask)
+                enc_output = enc_layer(enc_input=enc_output, 
+                                       enc_mask=attn_mask, 
+                                       non_pad_mask=non_pad_mask)
         
         if self.return_attn:
             return enc_output, self_attns
@@ -88,10 +92,12 @@ class Decoder(nn.Module):
         dec_enc_attns = []  # (n_layer, n_head*B, T_q, T)
         
         # self attention padding mask: (B, T_q, T)
+        non_pad_mask = get_padding_mask(q=dec, pad_idx=self.pad_idx, mode='nonpad')
         attn_mask = get_padding_mask(q=dec, k=dec, pad_idx=self.pad_idx, mode='attn')
         subseq_mask = get_padding_mask(q=dec, mode='subseq')
         self_attn_mask = (attn_mask + subseq_mask).gt(0)
         # enc_dec attention padding mask
+        non_pad_mask = get_padding_mask(q=dec, pad_idx=self.pad_idx, mode='nonpad')
         dec_enc_attn_mask = get_padding_mask(q=dec, k=enc, pad_idx=self.pad_idx, mode='attn')
         
         # embedding + position encoding: (B, T) --> (B, T, d_model)
@@ -103,12 +109,16 @@ class Decoder(nn.Module):
                 dec_output, dec_self_attn, dec_enc_attn = dec_layer(dec_input=dec_output, 
                                                                     enc_output=enc_output, 
                                                                     dec_self_mask=self_attn_mask, 
-                                                                    dec_enc_mask=dec_enc_attn_mask)
+                                                                    dec_enc_mask=dec_enc_attn_mask,
+                                                                    non_pad_mask=non_pad_mask)
                 self_attns.append(dec_self_attn)
                 dec_enc_attns.append(dec_enc_attn)
             else:
-                dec_output = dec_layer(dec_input=dec_output, enc_output=enc_output, 
-                                       dec_self_mask=self_attn_mask, dec_enc_mask=dec_enc_attn_mask)
+                dec_output = dec_layer(dec_input=dec_output, 
+                                       enc_output=enc_output, 
+                                       dec_self_mask=self_attn_mask, 
+                                       dec_enc_mask=dec_enc_attn_mask,
+                                       non_pad_mask=non_pad_mask)
         
         if self.return_attn:
             return dec_output, self_attns, dec_enc_attns
@@ -138,7 +148,7 @@ class Transformer(nn.Module):
                                drop_rate=drop_rate, 
                                use_conv=use_conv, 
                                return_attn=return_attn)
-        self.projection = XavierLinear(d_model, dec_vocab_len, bias=False)
+        self.projection = XavierLinear(d_model, dec_vocab_len)
         if linear_weight_share:
             # share the same weight matrix between the decoder embedding layer 
             # and the pre-softmax linear transformation

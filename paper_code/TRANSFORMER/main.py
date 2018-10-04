@@ -5,8 +5,12 @@ from train import build_dataloader, build_model_optimizer, train_model
 def main():
     parser = argparse.ArgumentParser(description='TRANSFORMER argument parser')
     # data path, basic settings and cuda
-    parser.add_argument('-pth_tr', '--TRAIN_PATH', help='location of path where your train data is located, must be tsv seperated in translation task', required=True)
-    parser.add_argument('-pth_va', '--VALID_PATH', help='location of path where your valid data is located, must be tsv seperated in translation task', required=True)
+    parser.add_argument('-iwslt', '--IWSLT', help='Use iwslt dataset', action='store_true')
+    parser.add_argument('-maxlen', '--MAX_LEN', help='Max length of sentence', type=int, default=100)
+    parser.add_argument('-minfreq', '--MIN_FREQ', help='Minmum frequence of vocab', type=int, default=2)
+    # custom dataset
+    parser.add_argument('-pth_tr', '--TRAIN_PATH', help='location of path where your train data is located, must be tsv seperated in translation task')
+    parser.add_argument('-pth_va', '--VALID_PATH', help='location of path where your valid data is located, must be tsv seperated in translation task')
     parser.add_argument('-exts', '--EXTS', help='"Source to Target" or "Target to source"', type=str, default='src-trg')
     parser.add_argument('-sos', '--SOS', help='Start of sentence token', default=None)
     parser.add_argument('-eos', '--EOS', help='End of sentence token', default=None)
@@ -40,9 +44,14 @@ def main():
     if config.USE_CUDA:
         assert config.USE_CUDA == torch.cuda.is_available(), 'cuda is not avaliable.'
     DEVICE = 'cuda' if config.USE_CUDA else None
-    train, valid, train_loader, valid_loader = build_dataloader(config)
-    model, optimizer, loss_function = build_model_optimizer(config, train, device=DEVICE)
-    train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=DEVICE)
+    if config.IWSLT:
+        SRC, TRG, train_loader, valid_loader = build_dataloader(config)
+        model, optimizer, loss_function = build_model_optimizer(config, (SRC, TRG), device=DEVICE)
+        train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=DEVICE)
+    else:
+        train, valid, train_loader, valid_loader = build_dataloader(config)
+        model, optimizer, loss_function = build_model_optimizer(config, train, device=DEVICE)
+        train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=DEVICE)
     
 if __name__ == '__main__':
     main()

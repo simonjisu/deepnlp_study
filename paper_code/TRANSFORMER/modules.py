@@ -35,7 +35,7 @@ class ScaledDotProductAttention(nn.Module):
         # to illustrate why the dot products get large,
         # check the function 'check_dotproduct_dist'
         if mask is not None:
-            attn = attn.masked_fill_(mask, -np.inf)
+            attn = attn.masked_fill(mask, -np.inf)
         
         attn = self.softmax(attn)  # (B, T_q, T_k) --> (B, T_q, T_k)
         output = torch.bmm(attn, v)  # (B, T_q, T_k) * (B, T_v, d_v) --> (B, T_q, d_v), make sure that T_k == T_v

@@ -1,19 +1,26 @@
 #!/bin/sh
 nohup python3 -u main.py \
-    -pth_tr ../../data/translation/de_en_small.txt \
-    -pth_va ../../data/translation/de_en_small_valid.txt \
-    -exts src-trg \
+    -iwslt \
+    -maxlen 100 \
+    -minfreq 2 \
+    -pth_tr "../../data/" \
     -stp 10 \
-    -bs 32 \
+    -bs 16 \
+    -sos "<s>" \
+    -eos "</s>" \
     -cuda \
-    -nl 3 \
-    -nh 5 \
-    -dk 32 \
-    -dv 32 \
-    -dm 160 \
-    -df 320 \
+    -emptymem \
+    -nl 6 \
+    -nh 8 \
+    -dk 64 \
+    -dv 64 \
+    -dm 512 \
+    -df 1024 \
     -drop 0.1 \
+    -thres 0.999 \
     -lws \
+    -eps 0.1 \
     -warm 4000 \
     -save \
-    -svp ./model/transformer > ./transformer.log &
+    -savebest \
+    -svp ./model/transformer.chkpt > ./logs/transformer.log &
