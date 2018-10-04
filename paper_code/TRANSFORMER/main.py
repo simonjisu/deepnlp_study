@@ -18,6 +18,7 @@ def main():
     parser.add_argument('-bs', '--BATCH', help='Batch Size', type=int, default=64)
     parser.add_argument('-cuda', '--USE_CUDA', help='Use cuda if exists', action='store_true')
     parser.add_argument('-emptymem', '--EMPTY_CUDA_MEMORY', help='Use cuda empty cashce', action='store_true')
+    parser.add_argument('-evalee', '--EVAL_EVERY', help='Eval Every', type=int, default=10)
     # model
     parser.add_argument('-nl', '--N_LAYER', help='Number of layers in Transformer Model', type=int, default=6)
     parser.add_argument('-nh', '--N_HEAD', help='Number of layers in Multihead Attention', type=int, default=8)

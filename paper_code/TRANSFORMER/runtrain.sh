@@ -6,6 +6,7 @@ nohup python3 -u main.py \
     -pth_tr "../../data/" \
     -stp 10 \
     -bs 16 \
+    -evalee 10 \
     -sos "<s>" \
     -eos "</s>" \
     -cuda \

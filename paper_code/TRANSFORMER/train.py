@@ -42,7 +42,7 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
     loss_per_step = 0
     total_words = 0
     correct_words = 0
-    eval_every = len(loader) // 5
+    eval_every = len(loader) // config.EVAL_EVERY
     
     start_time = time.time()
     for i, batch in enumerate(loader):

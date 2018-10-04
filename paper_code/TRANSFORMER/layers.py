@@ -34,7 +34,6 @@ class Encode_Layer(nn.Module):
             enc_output, enc_attn = self.selfattn(enc_input, enc_input, enc_input, mask=enc_mask)
         else:
             enc_output = self.selfattn(enc_input, enc_input, enc_input, mask=enc_mask)
-        
         enc_output = self.norm_selfattn(enc_input + enc_output)
         enc_output *= non_pad_mask
         
@@ -82,7 +81,8 @@ class Decode_Layer(nn.Module):
             dec_self_output, dec_self_attn = self.selfattn_masked(dec_input, dec_input, dec_input, 
                                                                   mask=dec_self_mask)
         else:
-            dec_self_output = self.selfattn_masked(dec_input, dec_input, dec_input, mask=dec_self_mask)
+            dec_self_output = self.selfattn_masked(dec_input, dec_input, dec_input, 
+                                                   mask=dec_self_mask)
         dec_self_output = self.norm_selfattn_masked(dec_input + dec_self_output)
         dec_self_output *= non_pad_mask
         
