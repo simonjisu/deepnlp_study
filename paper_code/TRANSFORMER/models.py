@@ -148,7 +148,7 @@ class Transformer(nn.Module):
                                drop_rate=drop_rate, 
                                use_conv=use_conv, 
                                return_attn=return_attn)
-        self.projection = XavierLinear(d_model, dec_vocab_len)
+        self.projection = XavierLinear(d_model, dec_vocab_len, bias=False)
         if linear_weight_share:
             # share the same weight matrix between the decoder embedding layer 
             # and the pre-softmax linear transformation

@@ -1,5 +1,5 @@
 #!/bin/sh
-nohup python3 -u main.py \
+CUDA_LAUNCH_BLOCKING=1 nohup python3 -u main.py \
     -iwslt \
     -maxlen 100 \
     -minfreq 2 \
@@ -16,7 +16,7 @@ nohup python3 -u main.py \
     -dk 64 \
     -dv 64 \
     -dm 512 \
-    -df 1024 \
+    -df 2048 \
     -drop 0.1 \
     -thres 0.999 \
     -lws \

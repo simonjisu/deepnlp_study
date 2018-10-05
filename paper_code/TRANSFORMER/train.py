@@ -68,14 +68,16 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
         total_words += n_words
         correct_words += n_correct
         loss_per_step += loss.item()
-
+            
         if i % eval_every == 0:
             end_time = time.time()
             total_time = end_time-start_time
             print(' > [{}/{:.2f}] loss_per_batch: {:.4f} time: {:.1f} s'.format(
                 i, i/len(loader)*100, loss.item()/n_words, total_time))
             start_time = time.time()
-            
+        
+        if config.EMPTY_CUDA_MEMORY:
+            torch.cuda.empty_cache()   
     accuracy = correct_words / total_words
     loss_per_step = loss_per_step / total_words
     return loss_per_step, accuracy
@@ -104,7 +106,8 @@ def validation(loader, model, loss_function, config, device=None):
         correct_words += n_correct
         loss_per_step += loss.item()
     
-    
+        if config.EMPTY_CUDA_MEMORY:
+            torch.cuda.empty_cache()
     accuracy = correct_words / total_words
     loss_per_step = loss_per_step / total_words
     
@@ -118,7 +121,7 @@ def build_model_optimizer(config, train, device=None):
         model = Transformer(enc_vocab_len=len(src_field.vocab.stoi),
                         enc_max_seq_len=config.MAX_LEN, 
                         dec_vocab_len=len(trg_field.vocab.stoi), 
-                        dec_max_seq_len=config.MAX_LEN, 
+                        dec_max_seq_len=config.MAX_LEN+2, 
                         n_layer=config.N_LAYER, 
                         n_head=config.N_HEAD, 
                         d_model=config.D_MODEL, 
@@ -170,7 +173,7 @@ def build_dataloader(config):
     if config.IWSLT:
         spacy_de = spacy.load('de')
         spacy_en = spacy.load('en')
-
+        
         def tokenize_de(text):
             return [tok.text for tok in spacy_de.tokenizer(text)]
 
@@ -190,7 +193,8 @@ def build_dataloader(config):
         return SRC, TRG, train_loader, valid_loader
     
     else:    
-        train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS, sos=config.SOS, eos=config.EOS)
+        train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS, 
+                                 sos=config.SOS, eos=config.EOS)
         valid = TranslateDataset(path=config.VALID_PATH, sos=config.SOS, eos=config.EOS,
                                  vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)])
         train_loader = torchdata.DataLoader(dataset=train,
