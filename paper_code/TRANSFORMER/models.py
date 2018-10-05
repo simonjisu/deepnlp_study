@@ -18,7 +18,7 @@ class Encoder(nn.Module):
         self.return_attn = return_attn
         self.dropout = nn.Dropout(drop_rate)
         self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
-        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
+        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model, pad_idx=0)
         self.layers = nn.ModuleList([Encode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
                                                   use_conv=use_conv,
@@ -68,7 +68,7 @@ class Decoder(nn.Module):
         self.return_attn = return_attn
         self.dropout = nn.Dropout(drop_rate)
         self.embed_layer = Embedding(vocab_len, d_model, pad_idx=pad_idx)
-        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model)
+        self.pos_layer = PositionalEncoding(max_seq_len+1, d_model, pad_idx=0)
         self.layers = nn.ModuleList([Decode_Layer(n_head, d_model, d_k, d_v, d_f, 
                                                   drop_rate=drop_rate, 
                                                   use_conv=use_conv,
@@ -97,7 +97,6 @@ class Decoder(nn.Module):
         subseq_mask = get_padding_mask(q=dec, mode='subseq')
         self_attn_mask = (attn_mask + subseq_mask).gt(0)
         # enc_dec attention padding mask
-        non_pad_mask = get_padding_mask(q=dec, pad_idx=self.pad_idx, mode='nonpad')
         dec_enc_attn_mask = get_padding_mask(q=dec, k=enc, pad_idx=self.pad_idx, mode='attn')
         
         # embedding + position encoding: (B, T) --> (B, T, d_model)

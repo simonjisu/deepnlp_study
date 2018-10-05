@@ -79,7 +79,7 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
         if config.EMPTY_CUDA_MEMORY:
             torch.cuda.empty_cache()   
     accuracy = correct_words / total_words
-    loss_per_step = loss_per_step / total_words
+    loss_per_step = loss_per_step / config.BATCH
     return loss_per_step, accuracy
 
 
@@ -109,7 +109,7 @@ def validation(loader, model, loss_function, config, device=None):
         if config.EMPTY_CUDA_MEMORY:
             torch.cuda.empty_cache()
     accuracy = correct_words / total_words
-    loss_per_step = loss_per_step / total_words
+    loss_per_step = loss_per_step / config.BATCH
     
     
     return loss_per_step, accuracy

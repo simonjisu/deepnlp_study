@@ -115,7 +115,7 @@ class PositionWiseFFN(nn.Module):
 # Positional Encoding
 class PositionalEncoding(nn.Module):
     """Positional Encoding"""
-    def __init__(self, n_pos, d_model):
+    def __init__(self, n_pos, d_model, pad_idx=0):
         """
         n_pos = max sequence length + 1
         """
@@ -125,7 +125,7 @@ class PositionalEncoding(nn.Module):
         self.pe_table = np.array(self.get_pe_table())
         self.pe_table[:, 0::2] = np.sin(self.pe_table[:, 0::2])
         self.pe_table[:, 1::2] = np.cos(self.pe_table[:, 1::2])
-            
+        self.pe_table[pad_idx, :] = 0  # embed all pad to 0
         self.pe = nn.Embedding.from_pretrained(torch.FloatTensor(self.pe_table), freeze=True)
         
     def cal_angle(self, pos, hid_idx):
