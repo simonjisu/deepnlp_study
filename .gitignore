@@ -51,6 +51,4 @@ fabric.properties`
 __pycache__
 .ipynb_checkpoints/
 data/*
-paper_code/NNLM/model/*
-paper_code/WORD2VEC/model/*
-paper_code/TRANSFORMER/model/*
+paper_code/*/model/*
