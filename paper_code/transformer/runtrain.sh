@@ -1,12 +1,12 @@
 #!/bin/sh
 CUDA_LAUNCH_BLOCKING=1 nohup python3 -u main.py \
     -iwslt \
-    -maxlen 100 \
+    -maxlen 50 \
     -minfreq 2 \
     -pth_tr "../../data/" \
-    -stp 10 \
-    -bs 16 \
-    -evalee 10 \
+    -stp 20 \
+    -bs 32 \
+    -pee 12 \
     -sos "<s>" \
     -eos "</s>" \
     -cuda \
@@ -18,8 +18,7 @@ CUDA_LAUNCH_BLOCKING=1 nohup python3 -u main.py \
     -dm 512 \
     -df 2048 \
     -drop 0.1 \
-    -thres 0.999 \
-    -lws \
+    -thres 0.9999 \
     -eps 0.1 \
     -warm 4000 \
     -save \

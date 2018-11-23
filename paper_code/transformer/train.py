@@ -12,7 +12,7 @@ from trans_dataloader import TranslateDataset
 from schoptim import ScheduledOptim
 from lbs import LabelSmoothing
 # iswlt
-from torchtext.data import Field, Iterator
+from torchtext.data import Field, BucketIterator
 from torchtext import datasets
 import spacy
 
@@ -38,20 +38,96 @@ def cal_performance(pred, target, loss_function, pad_idx=0):
     return loss, n_correct
 
 
+def import_data(config, device, is_test=False):
+    if config.DATATYPE == 'custom':
+        train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS, 
+                                 sos=config.SOS, eos=config.EOS, device=device)
+        valid = TranslateDataset(path=config.VALID_PATH, sos=config.SOS, eos=config.EOS,
+                                 vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)],
+                                 device=device)
+        train_loader = torchdata.DataLoader(dataset=train,
+                                        collate_fn=train.collate_fn,
+                                        batch_size=config.BATCH, 
+                                        shuffle=True, 
+                                        drop_last=False)
+        valid_loader = torchdata.DataLoader(dataset=valid,
+                                            collate_fn=valid.collate_fn,
+                                            batch_size=config.BATCH, 
+                                            shuffle=True, 
+                                            drop_last=False)
+        return train, valid, train_loader, valid_loader
+    
+    spacy_de = spacy.load('de')
+    spacy_en = spacy.load('en')
+
+    def tokenize_de(text):
+        return [tok.text for tok in spacy_de.tokenizer(text)]
+
+    def tokenize_en(text):
+        return [tok.text for tok in spacy_en.tokenizer(text)]
+
+    SRC = Field(tokenize=tokenize_de, 
+                use_vocab=True, 
+                lower=True, 
+                include_lengths=True, 
+                batch_first=True)
+    TRG = Field(tokenize=tokenize_en, 
+                use_vocab=True,
+                init_token='<s>',
+                eos_token='</s>', 
+                lower=True, 
+                batch_first=True)
+    if config.DATATYPE == 'iwslt':
+        train, valid, test = datasets.IWSLT.splits(
+            exts=('.de', '.en'), 
+            fields=(SRC, TRG), 
+            root=config.ROOTPATH, 
+            filter_pred=lambda x: len(x.src) <= config.MAX_LEN and len(x.trg) <= config.MAX_LEN)
+    elif config.DATATYPE == 'wmt':
+        train, valid, test = datasets.WMT14.splits(
+            exts=('.de', '.en'), 
+            fields=(SRC, TRG), 
+            root=config.ROOTPATH, 
+            filter_pred=lambda x: len(x.src) <= config.MAX_LEN and len(x.trg) <= config.MAX_LEN)
+
+    SRC.build_vocab(train.src, min_freq=config.MIN_FREQ)
+    TRG.build_vocab(train.trg, min_freq=config.MIN_FREQ)
+    print("Source Language: {} words, Target Language: {} words".format(len(SRC.vocab), len(TRG.vocab)))
+    print("Training Examples: {}, Validation Examples: {}".format(len(train), len(valid)))
+    if is_test:
+        train_loader, valid_loader, test_loader = BucketIterator.splits(
+            datasets=(train, valid, test), 
+            batch_sizes=(config.BATCH, config.BATCH, config.BATCH), 
+            sort_key=lambda x: len(x.src), 
+            sort_within_batch=True, 
+            repeat=False, 
+            device=device)
+        return SRC, TRG, train, valid, test, train_loader, valid_loader, test_loader
+    else:
+        train_loader, valid_loader = BucketIterator.splits(
+            datasets=(train, valid), 
+            batch_sizes=(config.BATCH, config.BATCH), 
+            sort_key=lambda x: len(x.src), 
+            sort_within_batch=True, 
+            repeat=False, 
+            device=device)
+        
+        return SRC, TRG, train, valid, train_loader, valid_loader
+
+
 def run_step(loader, model, optimizer, loss_function, config, device=None):
-    model = model.to(device)
     model.train()
     loss_per_step = 0
     total_words = 0
     correct_words = 0
-    eval_every = len(loader) // config.EVAL_EVERY
+    eval_every = len(loader) // config.PRINT_EVERY
     
     start_time = time.time()
     for i, batch in enumerate(loader):
-        if config.IWSLT:
+        if config.DATATYPE != 'custom':
             src_pos, trg_pos = map(get_pos, [batch.src, batch.trg])
             batch = [batch.src, src_pos, batch.trg, trg_pos]
-        src, src_pos, trg, trg_pos = map(lambda x: x.to(device), batch)
+        src, src_pos, trg, trg_pos = batch
         model.zero_grad()
         # forward
         output = model(enc=src, enc_pos=src_pos, dec=trg, dec_pos=trg_pos)
@@ -72,14 +148,14 @@ def run_step(loader, model, optimizer, loss_function, config, device=None):
         if i % eval_every == 0:
             end_time = time.time()
             total_time = end_time-start_time
-            print(' > [{}/{:.2f}] loss_per_batch: {:.4f} time: {:.1f} s'.format(
+            print(' > [{}/{:.2f} %] loss_per_batch: {:.4f} time: {:.1f} s'.format(
                 i, i/len(loader)*100, loss.item()/n_words, total_time))
             start_time = time.time()
         
         if config.EMPTY_CUDA_MEMORY:
             torch.cuda.empty_cache()   
     accuracy = correct_words / total_words
-    loss_per_step = loss_per_step / config.BATCH
+    loss_per_step = loss_per_step / total_words
     return loss_per_step, accuracy
 
 
@@ -89,7 +165,7 @@ def validation(loader, model, loss_function, config, device=None):
     total_words = 0
     correct_words = 0
     for i, batch in enumerate(loader):
-        if config.IWSLT:
+        if config.DATATYPE != 'custom':
             src_pos, trg_pos = map(get_pos, [batch.src, batch.trg])
             batch = [batch.src, src_pos, batch.trg, trg_pos]
         src, src_pos, trg, trg_pos = map(lambda x: x.to(device), batch)
@@ -109,15 +185,42 @@ def validation(loader, model, loss_function, config, device=None):
         if config.EMPTY_CUDA_MEMORY:
             torch.cuda.empty_cache()
     accuracy = correct_words / total_words
-    loss_per_step = loss_per_step / config.BATCH
+    loss_per_step = loss_per_step / total_words
     
     
     return loss_per_step, accuracy
 
 
-def build_model_optimizer(config, train, device=None):
-    if config.IWSLT:
-        src_field, trg_field = train
+def build_model(config, src_field=None, trg_field=None, device=None, train=None):
+    """
+    when use custom dataset: set train data
+    """    
+    if config.DATATYPE == 'custom':
+        assert train != None, "train must not be None"
+        model = Transformer(enc_vocab_len=len(train.src_vocab.stoi),
+                        enc_max_seq_len=train.src_maxlen, 
+                        dec_vocab_len=len(train.trg_vocab.stoi), 
+                        dec_max_seq_len=train.trg_maxlen, 
+                        n_layer=config.N_LAYER, 
+                        n_head=config.N_HEAD, 
+                        d_model=config.D_MODEL, 
+                        d_k=config.D_K,
+                        d_v=config.D_V,
+                        d_f=config.D_F, 
+                        pad_idx=train.src_vocab.stoi['<pad>'],
+                        drop_rate=config.DROP_RATE, 
+                        use_conv=config.USE_CONV, 
+                        return_attn=config.RETURN_ATTN,
+                        linear_weight_share=config.LINEAR_WS, 
+                        embed_weight_share=config.EMBED_WS).to(device)
+        optimizer = ScheduledOptim(optim.Adam(filter(lambda x: x.requires_grad, model.parameters()),
+                               betas=(0.9, 0.98), eps=1e-09), 
+                               config.D_MODEL, 
+                               config.WARMUP)
+        loss_function = LabelSmoothing(trg_vocab_size=len(train.trg_vocab.stoi), 
+                                       pad_idx=train.src_vocab.stoi['<pad>'], 
+                                       eps=config.EPS)
+    else:
         model = Transformer(enc_vocab_len=len(src_field.vocab.stoi),
                         enc_max_seq_len=config.MAX_LEN, 
                         dec_vocab_len=len(trg_field.vocab.stoi), 
@@ -141,73 +244,10 @@ def build_model_optimizer(config, train, device=None):
         loss_function = LabelSmoothing(trg_vocab_size=len(trg_field.vocab.stoi), 
                                        pad_idx=trg_field.vocab.stoi['<pad>'], 
                                        eps=config.EPS)
-        return model, optimizer, loss_function
-    else:
-        model = Transformer(enc_vocab_len=len(train.src_vocab.stoi),
-                        enc_max_seq_len=train.src_maxlen, 
-                        dec_vocab_len=len(train.trg_vocab.stoi), 
-                        dec_max_seq_len=train.trg_maxlen, 
-                        n_layer=config.N_LAYER, 
-                        n_head=config.N_HEAD, 
-                        d_model=config.D_MODEL, 
-                        d_k=config.D_K,
-                        d_v=config.D_V,
-                        d_f=config.D_F, 
-                        pad_idx=train.src_vocab.stoi['<pad>'],
-                        drop_rate=config.DROP_RATE, 
-                        use_conv=config.USE_CONV, 
-                        return_attn=config.RETURN_ATTN,
-                        linear_weight_share=config.LINEAR_WS, 
-                        embed_weight_share=config.EMBED_WS).to(device)
-    optimizer = ScheduledOptim(optim.Adam(filter(lambda x: x.requires_grad, model.parameters()),
-                           betas=(0.9, 0.98), eps=1e-09), 
-                           config.D_MODEL, 
-                           config.WARMUP)
-    loss_function = LabelSmoothing(trg_vocab_size=len(train.trg_vocab.stoi), 
-                                   pad_idx=train.src_vocab.stoi['<pad>'], 
-                                   eps=config.EPS)
     return model, optimizer, loss_function
 
 
-def build_dataloader(config):
-    if config.IWSLT:
-        spacy_de = spacy.load('de')
-        spacy_en = spacy.load('en')
-        
-        def tokenize_de(text):
-            return [tok.text for tok in spacy_de.tokenizer(text)]
 
-        def tokenize_en(text):
-            return [tok.text for tok in spacy_en.tokenizer(text)]
-
-        SRC = Field(tokenize=tokenize_de, lower=True, batch_first=True)
-        TRG = Field(tokenize=tokenize_en, init_token=config.SOS, eos_token=config.EOS, lower=True, batch_first=True)
-
-        train, valid, test = datasets.IWSLT.splits(exts=('.de', '.en'), fields=(SRC, TRG), 
-           root=config.TRAIN_PATH, filter_pred=lambda x: len(vars(x)['src']) <= config.MAX_LEN and len(vars(x)['trg']) <= config.MAX_LEN)
-        SRC.build_vocab(train.src, min_freq=config.MIN_FREQ)
-        TRG.build_vocab(train.trg, min_freq=config.MIN_FREQ)
-        train_loader, valid_loader = Iterator.splits(datasets=(train, valid),
-                                                     batch_sizes=(config.BATCH, config.BATCH), 
-                                                     shuffle=True, repeat=False)
-        return SRC, TRG, train_loader, valid_loader
-    
-    else:    
-        train = TranslateDataset(path=config.TRAIN_PATH, exts=config.EXTS, 
-                                 sos=config.SOS, eos=config.EOS)
-        valid = TranslateDataset(path=config.VALID_PATH, sos=config.SOS, eos=config.EOS,
-                                 vocab=[('src', train.src_vocab), ('trg', train.trg_vocab)])
-        train_loader = torchdata.DataLoader(dataset=train,
-                                        collate_fn=train.collate_fn,
-                                        batch_size=config.BATCH, 
-                                        shuffle=True, 
-                                        drop_last=False)
-        valid_loader = torchdata.DataLoader(dataset=valid,
-                                            collate_fn=valid.collate_fn,
-                                            batch_size=config.BATCH, 
-                                            shuffle=True, 
-                                            drop_last=False)
-        return train, valid, train_loader, valid_loader
 
 
 def train_model(train_loader, valid_loader, model, optimizer, loss_function, config, device=None):
@@ -240,10 +280,11 @@ def train_model(train_loader, valid_loader, model, optimizer, loss_function, con
                 model_path = config.SAVE_PATH + '{}_{:.4f}_{:.4f}'.format(step, train_acc, valid_acc)
                 torch.save(model.state_dict(), model_path)
                 print('****** model saved updated! ******')
-
-                if valid_acc > config.THRES:
-                    print('****** early break!! ******')
-                    break
+                # TODO: make early stop by loss
+                if config.THRES > 0.0:
+                    if valid_acc > config.THRES:
+                        print('****** early break!! ******')
+                        break
 
     end_time = time.time()
     total_time = end_time-start_time

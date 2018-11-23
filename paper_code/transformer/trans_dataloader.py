@@ -113,7 +113,7 @@ class TranslateDataset(torchdata.Dataset):
         src_pos = self._get_pos(src, pad_idx=self.src_vocab.stoi[self.pad_tkn], cons=self.cons)
         trg_pos = self._get_pos(trg, pad_idx=self.trg_vocab.stoi[self.pad_tkn], cons=self.cons)
         src, src_pos, trg, trg_pos = \
-            map(lambda x: torch.LongTensor(x), [src, src_pos, trg, trg_pos])
+            map(lambda x: torch.LongTensor(x).to(self.device), [src, src_pos, trg, trg_pos])
 #         TODO: return length of data and sort them
 #         get_len = lambda x: sorted([len(seq) for seq in x], reverse=True)
 #         if self.return_len:

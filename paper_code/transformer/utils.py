@@ -10,12 +10,14 @@ def get_padding_mask(q, k=None, pad_idx=1, mode='attn'):
     mode: attn
     > mask out for pad in attention with queries & keys sequences
     > return shape: (B, T_q, T_k)
+    mode: nonpad
+    > mask out pad rows in attention
+    > return shape: (B, T_q, T_k)
     mode: subseq
     > mask out next tokens to preserve 'auto-regressive property'
     > return shape: (B, T_q, T_q)
     """
     B, q_len = q.size()
-#     device = 'cuda' if torch.cuda.is_available() else None
     if mode == 'attn':
         assert k is not None, "must have key sequences"
         padding_mask = k.eq(pad_idx)

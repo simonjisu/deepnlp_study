@@ -12,6 +12,7 @@ class Encode_Layer(nn.Module):
     def __init__(self, n_head, d_model, d_k, d_v, d_f, drop_rate=0.1, use_conv=False, return_attn=True):
         super(Encode_Layer, self).__init__()
         self.return_attn = return_attn
+        self.n_head = n_head
         self.selfattn = MultiHeadAttention(n_head, d_model, d_k, d_v, drop_rate=drop_rate, return_attn=return_attn)
         self.pwffn = PositionWiseFFN(d_model, d_f, drop_rate=drop_rate, use_conv=use_conv)
         self.norm_selfattn = nn.LayerNorm(d_model)
@@ -42,15 +43,19 @@ class Encode_Layer(nn.Module):
         enc_output = self.norm_pwffn(enc_output + pw_output)
         enc_output *= non_pad_mask
         if self.return_attn:
+            # attns cat([B, T, T] * n_heads)
+            enc_attn = torch.cat([attn*non_pad_mask \
+                                  for attn in enc_attn.chunk(self.n_head, dim=0)], dim=0)
             return enc_output, enc_attn
         return enc_output
-
+    
 # Decode Layer
 class Decode_Layer(nn.Module):
     """decode layer"""
     def __init__(self, n_head, d_model, d_k, d_v, d_f, drop_rate=0.1, use_conv=False, return_attn=True):
         super(Decode_Layer, self).__init__()
         self.return_attn = return_attn
+        self.n_head = n_head
         self.selfattn_masked = MultiHeadAttention(n_head, d_model, d_k, d_v, drop_rate=drop_rate, 
                                                   return_attn=return_attn)
         self.dec_enc_attn = MultiHeadAttention(n_head, d_model, d_k, d_v, drop_rate=drop_rate, 
@@ -101,5 +106,9 @@ class Decode_Layer(nn.Module):
         dec_output = self.norm_pwffn(dec_output + pw_output)
         dec_output *= non_pad_mask
         if self.return_attn:
+            dec_self_attn = torch.cat([attn*non_pad_mask \
+                                       for attn in dec_self_attn.chunk(self.n_head, dim=0)], dim=0)
+            dec_enc_attn = torch.cat([attn*non_pad_mask \
+                                      for attn in dec_enc_attn.chunk(self.n_head, dim=0)], dim=0)
             return dec_output, dec_self_attn, dec_enc_attn
         return dec_output

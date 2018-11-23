@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class LabelSmoothing(nn.Module):
     """Label Smoothing"""
@@ -29,27 +30,14 @@ class LabelSmoothing(nn.Module):
             return self.criterion(x, target.view(-1))
         
         true_dist = torch.zeros_like(x)
-        true_dist.scatter(1, target.view(-1, 1), 1.0)
+        true_dist = true_dist.scatter(1, target.view(-1, 1), 1.0)
         true_dist = (1 - self.eps) * true_dist + self.eps / (self.trg_vocab_size -1)
         log_prob = F.log_softmax(x, dim=1)
         loss = -(true_dist * log_prob).sum(1)
-        non_pad_mask = t.view(-1).ne(self.pad_idx)
+        non_pad_mask = target.view(-1).ne(self.pad_idx)
+        loss = loss.masked_select(non_pad_mask).sum()
+        return loss
         
-        return loss.masked_select(non_pad_mask).sum()
-        
-        
-        # true_dist = x.clone()
-        # u(k) = 1 / K, exclude token <s>, <pad>
-        # true_dist.fill_(self.eps / (self.trg_vocab_size - 2))  
-        # at target index, value is (1-eps) * 1
-        # true_dist.scatter_(1, target.view(-1, 1), self.confidence)
-        # true_dist[:, self.pad_idx] = 0  # exclude token <s>
-        # mask = torch.nonzero(target.view(-1) == self.pad_idx)
-        # if mask.dim() > 0:
-        #    true_dist.index_fill_(0, mask.squeeze(), 0.0)
-        # self.true_dist = true_dist
-        # return self.criterion(x.log_softmax(1), true_dist.detach())    
-    
 #     def forward(self, x, target):
 #         """
 #         Inputs:

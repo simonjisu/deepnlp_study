@@ -1,0 +1,329 @@
+Namespace(BATCH=32, DROP_RATE=0.1, D_F=2048, D_K=64, D_MODEL=512, D_V=64, EMBED_WS=False, EMPTY_CUDA_MEMORY=True, EOS='</s>', EPS=0.1, EXTS='src-trg', IWSLT=True, LINEAR_WS=False, LOAD=False, MAX_LEN=50, MIN_FREQ=2, N_HEAD=8, N_LAYER=6, PRINT_EVERY=12, RETURN_ATTN=False, SAVE_BEST=True, SAVE_MODEL=True, SAVE_PATH='./model/transformer.chkpt', SOS='<s>', STEP=20, THRES=0.9999, TRAIN_PATH='../../data/', USE_CONV=False, USE_CUDA=True, VALID_PATH=None, WARMUP=4000)
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 10.3372 time: 0.7 s
+ > [493/8.33 %] loss_per_batch: 4.5017 time: 233.8 s
+ > [986/16.66 %] loss_per_batch: 2.9867 time: 231.9 s
+ > [1479/24.98 %] loss_per_batch: 2.3999 time: 234.5 s
+ > [1972/33.31 %] loss_per_batch: 1.9742 time: 233.6 s
+ > [2465/41.64 %] loss_per_batch: 1.6296 time: 233.0 s
+ > [2958/49.97 %] loss_per_batch: 1.6943 time: 234.1 s
+ > [3451/58.29 %] loss_per_batch: 1.5756 time: 234.5 s
+ > [3944/66.62 %] loss_per_batch: 1.6679 time: 232.4 s
+ > [4437/74.95 %] loss_per_batch: 1.6105 time: 235.5 s
+ > [4930/83.28 %] loss_per_batch: 1.5792 time: 234.5 s
+ > [5423/91.60 %] loss_per_batch: 1.6117 time: 234.3 s
+ > [5916/99.93 %] loss_per_batch: 1.6266 time: 233.3 s
+[1/20] (train) loss 2.4256, acc 0.8774 | (valid) loss 1.5749, acc 0.9852 
+
+****** model saved updated! ******
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5477 time: 0.5 s
+ > [493/8.33 %] loss_per_batch: 1.5312 time: 234.6 s
+ > [986/16.66 %] loss_per_batch: 1.6333 time: 235.0 s
+ > [1479/24.98 %] loss_per_batch: 1.6333 time: 231.4 s
+ > [1972/33.31 %] loss_per_batch: 1.6832 time: 234.0 s
+ > [2465/41.64 %] loss_per_batch: 1.6276 time: 234.4 s
+ > [2958/49.97 %] loss_per_batch: 1.5209 time: 232.1 s
+ > [3451/58.29 %] loss_per_batch: 1.6070 time: 235.9 s
+ > [3944/66.62 %] loss_per_batch: 1.5543 time: 234.0 s
+ > [4437/74.95 %] loss_per_batch: 1.5441 time: 233.6 s
+ > [4930/83.28 %] loss_per_batch: 1.5664 time: 237.2 s
+ > [5423/91.60 %] loss_per_batch: 1.5669 time: 232.5 s
+ > [5916/99.93 %] loss_per_batch: 1.5322 time: 234.6 s
+[2/20] (train) loss 1.6217, acc 0.9801 | (valid) loss 1.5786, acc 0.9840 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.8040 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.6158 time: 236.2 s
+ > [986/16.66 %] loss_per_batch: 1.6177 time: 233.7 s
+ > [1479/24.98 %] loss_per_batch: 1.6224 time: 234.9 s
+ > [1972/33.31 %] loss_per_batch: 1.5818 time: 234.8 s
+ > [2465/41.64 %] loss_per_batch: 1.6382 time: 235.2 s
+ > [2958/49.97 %] loss_per_batch: 1.6111 time: 236.5 s
+ > [3451/58.29 %] loss_per_batch: 1.5930 time: 232.9 s
+ > [3944/66.62 %] loss_per_batch: 1.6542 time: 235.7 s
+ > [4437/74.95 %] loss_per_batch: 1.5299 time: 236.0 s
+ > [4930/83.28 %] loss_per_batch: 1.5136 time: 234.7 s
+ > [5423/91.60 %] loss_per_batch: 1.6965 time: 234.5 s
+ > [5916/99.93 %] loss_per_batch: 1.6121 time: 234.7 s
+[3/20] (train) loss 1.6161, acc 0.9804 | (valid) loss 1.5757, acc 0.9844 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.4802 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.5548 time: 234.7 s
+ > [986/16.66 %] loss_per_batch: 1.5500 time: 233.9 s
+ > [1479/24.98 %] loss_per_batch: 1.6826 time: 231.8 s
+ > [1972/33.31 %] loss_per_batch: 1.5248 time: 236.7 s
+ > [2465/41.64 %] loss_per_batch: 1.5267 time: 234.6 s
+ > [2958/49.97 %] loss_per_batch: 1.6488 time: 232.9 s
+ > [3451/58.29 %] loss_per_batch: 1.4954 time: 235.0 s
+ > [3944/66.62 %] loss_per_batch: 1.4373 time: 233.8 s
+ > [4437/74.95 %] loss_per_batch: 1.4709 time: 236.1 s
+ > [4930/83.28 %] loss_per_batch: 1.5159 time: 232.7 s
+ > [5423/91.60 %] loss_per_batch: 1.5421 time: 235.7 s
+ > [5916/99.93 %] loss_per_batch: 1.5652 time: 236.0 s
+[4/20] (train) loss 1.6103, acc 0.9807 | (valid) loss 1.5576, acc 0.9854 
+
+****** model saved updated! ******
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.6557 time: 0.9 s
+ > [493/8.33 %] loss_per_batch: 1.6580 time: 234.3 s
+ > [986/16.66 %] loss_per_batch: 1.6869 time: 234.5 s
+ > [1479/24.98 %] loss_per_batch: 1.6435 time: 232.5 s
+ > [1972/33.31 %] loss_per_batch: 1.5666 time: 235.6 s
+ > [2465/41.64 %] loss_per_batch: 1.6103 time: 238.9 s
+ > [2958/49.97 %] loss_per_batch: 1.5618 time: 235.6 s
+ > [3451/58.29 %] loss_per_batch: 1.5216 time: 232.3 s
+ > [3944/66.62 %] loss_per_batch: 1.6861 time: 235.2 s
+ > [4437/74.95 %] loss_per_batch: 1.6231 time: 234.1 s
+ > [4930/83.28 %] loss_per_batch: 1.6642 time: 233.2 s
+ > [5423/91.60 %] loss_per_batch: 1.5620 time: 235.9 s
+ > [5916/99.93 %] loss_per_batch: 1.6404 time: 234.7 s
+[5/20] (train) loss 1.6073, acc 0.9809 | (valid) loss 1.5622, acc 0.9845 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5811 time: 0.9 s
+ > [493/8.33 %] loss_per_batch: 1.5472 time: 233.4 s
+ > [986/16.66 %] loss_per_batch: 1.8143 time: 235.0 s
+ > [1479/24.98 %] loss_per_batch: 1.6358 time: 234.1 s
+ > [1972/33.31 %] loss_per_batch: 1.7656 time: 236.3 s
+ > [2465/41.64 %] loss_per_batch: 1.5808 time: 232.7 s
+ > [2958/49.97 %] loss_per_batch: 1.5481 time: 238.8 s
+ > [3451/58.29 %] loss_per_batch: 1.6388 time: 234.8 s
+ > [3944/66.62 %] loss_per_batch: 1.4929 time: 233.4 s
+ > [4437/74.95 %] loss_per_batch: 1.5081 time: 234.9 s
+ > [4930/83.28 %] loss_per_batch: 1.5149 time: 235.3 s
+ > [5423/91.60 %] loss_per_batch: 1.5271 time: 234.5 s
+ > [5916/99.93 %] loss_per_batch: 1.5350 time: 235.7 s
+[6/20] (train) loss 1.6059, acc 0.9808 | (valid) loss 1.5569, acc 0.9853 
+
+****** model saved updated! ******
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5352 time: 0.7 s
+ > [493/8.33 %] loss_per_batch: 1.6168 time: 236.9 s
+ > [986/16.66 %] loss_per_batch: 1.4696 time: 233.6 s
+ > [1479/24.98 %] loss_per_batch: 1.5928 time: 235.1 s
+ > [1972/33.31 %] loss_per_batch: 1.6860 time: 232.0 s
+ > [2465/41.64 %] loss_per_batch: 1.6180 time: 233.5 s
+ > [2958/49.97 %] loss_per_batch: 1.5435 time: 234.2 s
+ > [3451/58.29 %] loss_per_batch: 1.5016 time: 235.2 s
+ > [3944/66.62 %] loss_per_batch: 1.6286 time: 235.2 s
+ > [4437/74.95 %] loss_per_batch: 1.4528 time: 232.4 s
+ > [4930/83.28 %] loss_per_batch: 1.6253 time: 238.2 s
+ > [5423/91.60 %] loss_per_batch: 1.5725 time: 233.6 s
+ > [5916/99.93 %] loss_per_batch: 1.6916 time: 235.8 s
+[7/20] (train) loss 1.6054, acc 0.9805 | (valid) loss 1.5510, acc 0.9859 
+
+****** model saved updated! ******
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5916 time: 0.7 s
+ > [493/8.33 %] loss_per_batch: 1.6115 time: 235.6 s
+ > [986/16.66 %] loss_per_batch: 1.5498 time: 235.9 s
+ > [1479/24.98 %] loss_per_batch: 1.5207 time: 233.0 s
+ > [1972/33.31 %] loss_per_batch: 1.5138 time: 236.6 s
+ > [2465/41.64 %] loss_per_batch: 1.5431 time: 236.8 s
+ > [2958/49.97 %] loss_per_batch: 1.5711 time: 233.8 s
+ > [3451/58.29 %] loss_per_batch: 1.7031 time: 235.2 s
+ > [3944/66.62 %] loss_per_batch: 1.5422 time: 235.5 s
+ > [4437/74.95 %] loss_per_batch: 1.5630 time: 235.3 s
+ > [4930/83.28 %] loss_per_batch: 1.6207 time: 238.7 s
+ > [5423/91.60 %] loss_per_batch: 1.6490 time: 234.4 s
+ > [5916/99.93 %] loss_per_batch: 1.6866 time: 236.1 s
+[8/20] (train) loss 1.6050, acc 0.9806 | (valid) loss 1.5604, acc 0.9851 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.6102 time: 0.7 s
+ > [493/8.33 %] loss_per_batch: 1.5171 time: 240.7 s
+ > [986/16.66 %] loss_per_batch: 1.5686 time: 235.5 s
+ > [1479/24.98 %] loss_per_batch: 1.5700 time: 232.9 s
+ > [1972/33.31 %] loss_per_batch: 1.6573 time: 236.4 s
+ > [2465/41.64 %] loss_per_batch: 1.7041 time: 235.4 s
+ > [2958/49.97 %] loss_per_batch: 1.6273 time: 236.6 s
+ > [3451/58.29 %] loss_per_batch: 1.5710 time: 230.6 s
+ > [3944/66.62 %] loss_per_batch: 1.6121 time: 237.9 s
+ > [4437/74.95 %] loss_per_batch: 1.6126 time: 232.0 s
+ > [4930/83.28 %] loss_per_batch: 1.6491 time: 233.0 s
+ > [5423/91.60 %] loss_per_batch: 1.6376 time: 234.8 s
+ > [5916/99.93 %] loss_per_batch: 1.6028 time: 234.6 s
+[9/20] (train) loss 1.6031, acc 0.9807 | (valid) loss 1.5560, acc 0.9855 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5768 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.6109 time: 236.3 s
+ > [986/16.66 %] loss_per_batch: 1.6878 time: 233.4 s
+ > [1479/24.98 %] loss_per_batch: 1.6715 time: 234.7 s
+ > [1972/33.31 %] loss_per_batch: 1.4924 time: 233.6 s
+ > [2465/41.64 %] loss_per_batch: 1.6286 time: 235.1 s
+ > [2958/49.97 %] loss_per_batch: 1.6338 time: 232.3 s
+ > [3451/58.29 %] loss_per_batch: 1.6133 time: 237.7 s
+ > [3944/66.62 %] loss_per_batch: 1.5975 time: 233.8 s
+ > [4437/74.95 %] loss_per_batch: 1.7101 time: 234.9 s
+ > [4930/83.28 %] loss_per_batch: 1.5621 time: 235.1 s
+ > [5423/91.60 %] loss_per_batch: 1.5897 time: 237.6 s
+ > [5916/99.93 %] loss_per_batch: 1.6754 time: 235.7 s
+[10/20] (train) loss 1.6018, acc 0.9808 | (valid) loss 1.5556, acc 0.9854 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5996 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.4886 time: 236.6 s
+ > [986/16.66 %] loss_per_batch: 1.6550 time: 236.4 s
+ > [1479/24.98 %] loss_per_batch: 1.5281 time: 234.3 s
+ > [1972/33.31 %] loss_per_batch: 1.6547 time: 235.6 s
+ > [2465/41.64 %] loss_per_batch: 1.6862 time: 235.2 s
+ > [2958/49.97 %] loss_per_batch: 1.5799 time: 236.5 s
+ > [3451/58.29 %] loss_per_batch: 1.5847 time: 234.8 s
+ > [3944/66.62 %] loss_per_batch: 1.6327 time: 236.9 s
+ > [4437/74.95 %] loss_per_batch: 1.6214 time: 235.5 s
+ > [4930/83.28 %] loss_per_batch: 1.6201 time: 234.4 s
+ > [5423/91.60 %] loss_per_batch: 1.6582 time: 235.1 s
+ > [5916/99.93 %] loss_per_batch: 1.5621 time: 235.9 s
+[11/20] (train) loss 1.6021, acc 0.9805 | (valid) loss 1.5584, acc 0.9852 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.6360 time: 0.9 s
+ > [493/8.33 %] loss_per_batch: 1.6634 time: 237.2 s
+ > [986/16.66 %] loss_per_batch: 1.5584 time: 233.8 s
+ > [1479/24.98 %] loss_per_batch: 1.6537 time: 237.6 s
+ > [1972/33.31 %] loss_per_batch: 1.6595 time: 236.3 s
+ > [2465/41.64 %] loss_per_batch: 1.5902 time: 233.9 s
+ > [2958/49.97 %] loss_per_batch: 1.4910 time: 236.2 s
+ > [3451/58.29 %] loss_per_batch: 1.6612 time: 235.0 s
+ > [3944/66.62 %] loss_per_batch: 1.5818 time: 236.4 s
+ > [4437/74.95 %] loss_per_batch: 1.5412 time: 237.1 s
+ > [4930/83.28 %] loss_per_batch: 1.6377 time: 233.9 s
+ > [5423/91.60 %] loss_per_batch: 1.6386 time: 234.0 s
+ > [5916/99.93 %] loss_per_batch: 1.6426 time: 236.4 s
+[12/20] (train) loss 1.6008, acc 0.9806 | (valid) loss 1.5539, acc 0.9861 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.4583 time: 0.5 s
+ > [493/8.33 %] loss_per_batch: 1.6311 time: 236.0 s
+ > [986/16.66 %] loss_per_batch: 1.6502 time: 233.6 s
+ > [1479/24.98 %] loss_per_batch: 1.7151 time: 235.6 s
+ > [1972/33.31 %] loss_per_batch: 1.5324 time: 234.0 s
+ > [2465/41.64 %] loss_per_batch: 1.5607 time: 235.1 s
+ > [2958/49.97 %] loss_per_batch: 1.6189 time: 238.5 s
+ > [3451/58.29 %] loss_per_batch: 1.5533 time: 235.3 s
+ > [3944/66.62 %] loss_per_batch: 1.6877 time: 231.8 s
+ > [4437/74.95 %] loss_per_batch: 1.5896 time: 237.7 s
+ > [4930/83.28 %] loss_per_batch: 1.6193 time: 233.7 s
+ > [5423/91.60 %] loss_per_batch: 1.5141 time: 237.4 s
+ > [5916/99.93 %] loss_per_batch: 1.4797 time: 234.7 s
+[13/20] (train) loss 1.5997, acc 0.9807 | (valid) loss 1.5534, acc 0.9844 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5905 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.5085 time: 236.0 s
+ > [986/16.66 %] loss_per_batch: 1.6171 time: 238.0 s
+ > [1479/24.98 %] loss_per_batch: 1.5544 time: 234.6 s
+ > [1972/33.31 %] loss_per_batch: 1.6069 time: 237.2 s
+ > [2465/41.64 %] loss_per_batch: 1.5731 time: 236.6 s
+ > [2958/49.97 %] loss_per_batch: 1.6043 time: 239.0 s
+ > [3451/58.29 %] loss_per_batch: 1.5883 time: 235.6 s
+ > [3944/66.62 %] loss_per_batch: 1.6245 time: 237.4 s
+ > [4437/74.95 %] loss_per_batch: 1.5802 time: 237.2 s
+ > [4930/83.28 %] loss_per_batch: 1.6026 time: 235.2 s
+ > [5423/91.60 %] loss_per_batch: 1.6166 time: 237.3 s
+ > [5916/99.93 %] loss_per_batch: 1.5124 time: 234.8 s
+[14/20] (train) loss 1.5988, acc 0.9807 | (valid) loss 1.5551, acc 0.9854 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.4981 time: 0.5 s
+ > [493/8.33 %] loss_per_batch: 1.5582 time: 233.8 s
+ > [986/16.66 %] loss_per_batch: 1.6309 time: 235.1 s
+ > [1479/24.98 %] loss_per_batch: 1.5987 time: 236.8 s
+ > [1972/33.31 %] loss_per_batch: 1.6123 time: 236.4 s
+ > [2465/41.64 %] loss_per_batch: 1.5624 time: 238.7 s
+ > [2958/49.97 %] loss_per_batch: 1.5699 time: 236.2 s
+ > [3451/58.29 %] loss_per_batch: 1.5695 time: 233.9 s
+ > [3944/66.62 %] loss_per_batch: 1.6474 time: 238.9 s
+ > [4437/74.95 %] loss_per_batch: 1.5447 time: 236.7 s
+ > [4930/83.28 %] loss_per_batch: 1.5158 time: 236.5 s
+ > [5423/91.60 %] loss_per_batch: 1.5981 time: 235.6 s
+ > [5916/99.93 %] loss_per_batch: 1.5756 time: 235.7 s
+[15/20] (train) loss 1.5991, acc 0.9806 | (valid) loss 1.5550, acc 0.9854 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5903 time: 0.7 s
+ > [493/8.33 %] loss_per_batch: 1.6597 time: 236.2 s
+ > [986/16.66 %] loss_per_batch: 1.5483 time: 231.7 s
+ > [1479/24.98 %] loss_per_batch: 1.4894 time: 234.8 s
+ > [1972/33.31 %] loss_per_batch: 1.6243 time: 237.3 s
+ > [2465/41.64 %] loss_per_batch: 1.6590 time: 237.1 s
+ > [2958/49.97 %] loss_per_batch: 1.4809 time: 232.3 s
+ > [3451/58.29 %] loss_per_batch: 1.5148 time: 236.7 s
+ > [3944/66.62 %] loss_per_batch: 1.6122 time: 237.5 s
+ > [4437/74.95 %] loss_per_batch: 1.4956 time: 234.3 s
+ > [4930/83.28 %] loss_per_batch: 1.4452 time: 234.7 s
+ > [5423/91.60 %] loss_per_batch: 1.7164 time: 237.4 s
+ > [5916/99.93 %] loss_per_batch: 1.5710 time: 234.5 s
+[16/20] (train) loss 1.5987, acc 0.9806 | (valid) loss 1.5547, acc 0.9851 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5917 time: 0.9 s
+ > [493/8.33 %] loss_per_batch: 1.4960 time: 234.5 s
+ > [986/16.66 %] loss_per_batch: 1.5769 time: 237.0 s
+ > [1479/24.98 %] loss_per_batch: 1.6404 time: 234.9 s
+ > [1972/33.31 %] loss_per_batch: 1.5599 time: 237.3 s
+ > [2465/41.64 %] loss_per_batch: 1.6438 time: 237.0 s
+ > [2958/49.97 %] loss_per_batch: 1.6086 time: 234.4 s
+ > [3451/58.29 %] loss_per_batch: 1.5559 time: 237.0 s
+ > [3944/66.62 %] loss_per_batch: 1.5265 time: 237.4 s
+ > [4437/74.95 %] loss_per_batch: 1.6506 time: 236.0 s
+ > [4930/83.28 %] loss_per_batch: 1.5263 time: 234.3 s
+ > [5423/91.60 %] loss_per_batch: 1.5054 time: 232.9 s
+ > [5916/99.93 %] loss_per_batch: 1.8181 time: 236.4 s
+[17/20] (train) loss 1.5974, acc 0.9807 | (valid) loss 1.5549, acc 0.9864 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.6613 time: 0.6 s
+ > [493/8.33 %] loss_per_batch: 1.6124 time: 236.4 s
+ > [986/16.66 %] loss_per_batch: 1.5518 time: 237.6 s
+ > [1479/24.98 %] loss_per_batch: 1.5869 time: 237.1 s
+ > [1972/33.31 %] loss_per_batch: 1.5633 time: 235.3 s
+ > [2465/41.64 %] loss_per_batch: 1.5538 time: 234.3 s
+ > [2958/49.97 %] loss_per_batch: 1.6508 time: 236.3 s
+ > [3451/58.29 %] loss_per_batch: 1.5378 time: 235.5 s
+ > [3944/66.62 %] loss_per_batch: 1.5514 time: 237.7 s
+ > [4437/74.95 %] loss_per_batch: 1.4162 time: 237.7 s
+ > [4930/83.28 %] loss_per_batch: 1.6750 time: 235.1 s
+ > [5423/91.60 %] loss_per_batch: 1.6074 time: 234.2 s
+ > [5916/99.93 %] loss_per_batch: 1.5785 time: 235.8 s
+[18/20] (train) loss 1.5967, acc 0.9807 | (valid) loss 1.5618, acc 0.9839 
+
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5339 time: 0.5 s
+ > [493/8.33 %] loss_per_batch: 1.7510 time: 238.9 s
+ > [986/16.66 %] loss_per_batch: 1.5327 time: 234.4 s
+ > [1479/24.98 %] loss_per_batch: 1.4598 time: 236.6 s
+ > [1972/33.31 %] loss_per_batch: 1.6111 time: 236.7 s
+ > [2465/41.64 %] loss_per_batch: 1.6440 time: 235.4 s
+ > [2958/49.97 %] loss_per_batch: 1.7275 time: 234.9 s
+ > [3451/58.29 %] loss_per_batch: 1.6222 time: 236.4 s
+ > [3944/66.62 %] loss_per_batch: 1.5267 time: 234.3 s
+ > [4437/74.95 %] loss_per_batch: 1.7348 time: 236.3 s
+ > [4930/83.28 %] loss_per_batch: 1.5063 time: 235.5 s
+ > [5423/91.60 %] loss_per_batch: 1.5951 time: 238.1 s
+ > [5916/99.93 %] loss_per_batch: 1.5447 time: 235.8 s
+[19/20] (train) loss 1.5975, acc 0.9805 | (valid) loss 1.5504, acc 0.9850 
+
+****** model saved updated! ******
+----------------------------------------
+ > [0/0.00 %] loss_per_batch: 1.5645 time: 0.5 s
+ > [493/8.33 %] loss_per_batch: 1.5701 time: 237.6 s
+ > [986/16.66 %] loss_per_batch: 1.5710 time: 235.5 s
+ > [1479/24.98 %] loss_per_batch: 1.5874 time: 237.0 s
+ > [1972/33.31 %] loss_per_batch: 1.5500 time: 236.3 s
+ > [2465/41.64 %] loss_per_batch: 1.5965 time: 238.0 s
+ > [2958/49.97 %] loss_per_batch: 1.4662 time: 235.5 s
+ > [3451/58.29 %] loss_per_batch: 1.5715 time: 235.1 s
+ > [3944/66.62 %] loss_per_batch: 1.5906 time: 232.4 s
+ > [4437/74.95 %] loss_per_batch: 1.6466 time: 237.4 s
+ > [4930/83.28 %] loss_per_batch: 1.3894 time: 237.3 s
+ > [5423/91.60 %] loss_per_batch: 1.6044 time: 234.3 s
+ > [5916/99.93 %] loss_per_batch: 1.6131 time: 234.7 s
+[20/20] (train) loss 1.5968, acc 0.9806 | (valid) loss 1.5466, acc 0.9862 
+
+****** model saved updated! ******
+
+Training Excution time with validation: 15 h 44 m 31.0496 s
