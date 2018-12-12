@@ -1,6 +1,6 @@
 # DeepNLP_Study
 
-> Paper implementation Study
+> Paper implementation Study For Personal
 
 ## Contents
 
